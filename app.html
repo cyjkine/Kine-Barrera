@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KineControl PWA | Control Kinésico - Klgo. Cristian Barrera Pinto</title>
-
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -30,335 +29,380 @@
             }
         }
     </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
 </head>
-<body class="h-full text-slate-800 font-sans flex flex-col md:flex-row antialiased select-none overflow-x-hidden">
+<body class="h-full text-slate-800 font-sans flex flex-col antialiased selection:bg-teal-500 selection:text-white overflow-x-hidden">
 
-    <!-- OVERLAY DE INGRESO SEGURA (LOGIN / PIN) -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-        <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl max-w-sm w-full border border-slate-200 text-center space-y-5">
-            <div class="w-16 h-16 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
-                <i class="fa-solid fa-user-lock"></i>
+    <!-- OVERLAY DE BLOQUEO DE SEGURIDAD (PIN) -->
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-6 transform transition-all">
+            <div class="w-16 h-16 bg-gradient-to-tr from-teal-600 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto text-white text-2xl shadow-lg shadow-teal-500/30">
+                <i class="fa-solid fa-user-doctor"></i>
             </div>
             <div>
-                <h3 class="font-heading font-bold text-xl text-slate-900">Acceso Clínico Restringido</h3>
+                <h2 class="font-heading font-bold text-xl text-slate-900">Control Kinésico</h2>
                 <p class="text-xs text-slate-500 mt-1">Klgo. Cristian Barrera Pinto</p>
             </div>
+            
             <form onsubmit="handleLogin(event)" class="space-y-4">
-                <input id="loginPinInput" type="password" placeholder="Ingresa clave de acceso" class="w-full text-center px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 font-mono tracking-widest text-lg" required autofocus>
-                <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition shadow-lg shadow-teal-600/30">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5 text-left">Contraseña de Acceso Clínico</label>
+                    <input type="password" id="loginPinInput" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center font-bold tracking-widest text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 text-base">
+                </div>
+                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-teal-600/30 transition">
                     Ingresar al Panel
                 </button>
             </form>
-            <p class="text-[11px] text-slate-400">Plataforma PWA Privada para Gestión Kinésica</p>
+            <p class="text-[11px] text-slate-400">Protección de Datos Médicos Sensibles</p>
         </div>
     </div>
 
-    <!-- BARRA LATERAL (DESKTOP & MOBILE SIDEBAR) -->
-    <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-40 hidden md:hidden"></div>
-    
-    <aside id="sidebar" class="fixed md:static inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-xl">
-        <div class="p-5 space-y-6">
-            <!-- Brand -->
-            <div class="flex items-center space-x-3 pb-4 border-b border-slate-800">
-                <div class="w-10 h-10 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center font-bold text-lg shadow-md shadow-teal-500/20">
-                    <i class="fa-solid fa-heart-pulse"></i>
+    <!-- BARRA SUPERIOR MÓVIL (HEADER) -->
+    <header class="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 border-b border-slate-800 shadow-md">
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleSidebar()" class="p-2 text-slate-300 hover:text-white focus:outline-none" aria-label="Abrir Menú">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">
+                    <i class="fa-solid fa-notes-medical"></i>
                 </div>
-                <div>
-                    <h1 class="font-heading font-bold text-white text-base leading-tight">Control Kinésico</h1>
-                    <p class="text-[10px] text-teal-400 font-semibold uppercase tracking-wider">PWA Klgo. C. Barrera</p>
+                <span class="font-heading font-bold text-sm tracking-wide text-white">KineControl</span>
+            </div>
+        </div>
+        <button onclick="lockSystem()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+            <i class="fa-solid fa-lock text-teal-400"></i>
+        </button>
+    </header>
+
+    <div class="flex flex-1 h-full overflow-hidden relative">
+        <!-- BACKDROP MÓVIL -->
+        <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-900/60 z-40 hidden md:hidden transition-opacity"></div>
+
+        <!-- BARRA LATERAL (SIDEBAR) -->
+        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col justify-between border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out h-full">
+            <div class="p-5 space-y-6 overflow-y-auto custom-scrollbar">
+                <!-- Branding logo -->
+                <div class="flex items-center space-x-3 pb-4 border-b border-slate-800/80">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center text-white font-bold shadow-md shadow-teal-500/20">
+                        <i class="fa-solid fa-user-doctor text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-heading font-bold text-base text-white leading-tight">Control Kinésico</h1>
+                        <p class="text-[10px] text-teal-400 font-medium">PWA Clínica Pro</p>
+                    </div>
                 </div>
+
+                <!-- Navigation Links -->
+                <nav class="space-y-1.5">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-teal-600 text-white shadow-lg transition">
+                        <i class="fa-solid fa-chart-pie text-base w-5 text-center"></i>
+                        <span>Inicio & Métricas</span>
+                    </button>
+
+                    <button onclick="switchTab('pacientes')" id="nav-pacientes" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-id-card text-base w-5 text-center"></i>
+                        <span>Buscar por RUT</span>
+                    </button>
+
+                    <button onclick="switchTab('atencion')" id="nav-atencion" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-circle-plus text-base w-5 text-center"></i>
+                        <span>Nueva Atención</span>
+                    </button>
+
+                    <button onclick="switchTab('pautas')" id="nav-pautas" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-dumbell text-base w-5 text-center"></i>
+                        <span>Pautas de Ejercicio</span>
+                    </button>
+
+                    <button onclick="switchTab('agenda')" id="nav-agenda" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
+                        <i class="fa-regular fa-calendar-check text-base w-5 text-center"></i>
+                        <span>Agenda & Citas</span>
+                    </button>
+                </nav>
             </div>
 
-            <!-- Navegación -->
-            <nav class="space-y-1.5 text-xs font-semibold">
-                <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-item w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl bg-teal-600 text-white shadow-lg shadow-teal-600/20 transition">
-                    <i class="fa-solid fa-chart-pie text-base w-5 text-center"></i>
-                    <span>Inicio & Métricas</span>
-                </button>
-                <button id="nav-pacientes" onclick="switchTab('pacientes')" class="nav-item w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
-                    <i class="fa-solid fa-users text-base w-5 text-center"></i>
-                    <span>Pacientes & RUT</span>
-                </button>
-                <button id="nav-atencion" onclick="switchTab('atencion')" class="nav-item w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
-                    <i class="fa-solid fa-notes-medical text-base w-5 text-center"></i>
-                    <span>Nueva Atención</span>
-                </button>
-                <button id="nav-pautas" onclick="switchTab('pautas')" class="nav-item w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
-                    <i class="fa-solid fa-dumbbell text-base w-5 text-center"></i>
-                    <span>Pautas de Ejercicio</span>
-                </button>
-                <button id="nav-agenda" onclick="switchTab('agenda')" class="nav-item w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition">
-                    <i class="fa-solid fa-calendar-days text-base w-5 text-center"></i>
-                    <span>Agenda & Citas</span>
-                </button>
-            </nav>
-        </div>
-
-        <!-- Footer Sidebar -->
-        <div class="p-4 border-t border-slate-800 space-y-3">
-            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-[11px] flex justify-between items-center">
-                <div class="truncate">
-                    <p class="font-bold text-slate-200">Servidor Clínico</p>
+            <!-- Footer Sidebar con estado e información del profesional -->
+            <div class="p-4 border-t border-slate-800/80 bg-slate-900/50 space-y-3">
+                <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="text-[11px] font-medium text-slate-300">Base de Datos</span>
+                    </div>
                     <span id="dbStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">Conectado</span>
                 </div>
-            </div>
-            <button onclick="lockSystem()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-lock text-xs"></i>
-                <span>Bloquear Sistema</span>
-            </button>
-        </div>
-    </aside>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        
-        <!-- Header Móvil & Desktop -->
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 sm:px-6 py-3.5 flex justify-between items-center shadow-sm">
-            <div class="flex items-center space-x-3">
-                <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl focus:outline-none">
-                    <i class="fa-solid fa-bars text-lg"></i>
-                </button>
-                <h2 id="currentTabTitle" class="font-heading font-bold text-base sm:text-lg text-slate-900">Inicio & Métricas</h2>
-            </div>
-            
-            <div class="flex items-center space-x-2 sm:space-x-3">
-                <span id="statStatusText" class="hidden sm:inline text-xs text-slate-500 font-medium">Sistema Clínico Activo</span>
-                <a href="index.html" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center space-x-1.5">
-                    <i class="fa-solid fa-globe"></i>
-                    <span class="hidden xs:inline">Web Pública</span>
-                </a>
-            </div>
-        </header>
-
-        <!-- CONTENIDOS POR PESTAÑA -->
-        <div class="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
-
-            <!-- TAB 1: DASHBOARD -->
-            <section id="tab-dashboard" class="tab-content space-y-6">
-                <!-- Banner Bienvenida -->
-                <div class="bg-gradient-to-r from-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-2 relative overflow-hidden">
-                    <div class="relative z-10">
-                        <span class="bg-teal-500/30 text-teal-200 text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-teal-400/30">Panel Profesional</span>
-                        <h3 class="font-heading font-bold text-2xl sm:text-3xl mt-2">¡Bienvenido, Klgo. Cristian Barrera!</h3>
-                        <p class="text-slate-200 text-xs sm:text-sm font-light max-w-xl">Gestión integral de atenciones, ficha clínica, dolor EVA y pautas de ejercicios para la casa.</p>
-                    </div>
-                </div>
-
-                <!-- Métricas Rápidas -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div class="flex items-center justify-between pt-1">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-full bg-teal-800 text-teal-200 font-bold text-xs flex items-center justify-center border border-teal-600">
+                            CB
+                        </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-400">Total Pacientes Registrados</p>
-                            <h4 id="statTotalPatients" class="text-2xl font-bold text-slate-900 mt-1">0</h4>
-                        </div>
-                        <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-users"></i>
+                            <p class="text-xs font-bold text-white leading-tight">Klgo. Cristian Barrera</p>
+                            <p class="text-[10px] text-slate-400">Kinesiólogo Clínico</p>
                         </div>
                     </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400">Atenciones Registradas</p>
-                            <h4 id="statTodayAppts" class="text-2xl font-bold text-slate-900 mt-1">0</h4>
-                        </div>
-                        <div class="w-12 h-12 bg-cyan-50 text-cyan-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-stethoscope"></i>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between sm:col-span-2 lg:col-span-1">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400">Acceso Rápido</p>
-                            <button onclick="openNewPatientModal()" class="mt-2 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl transition flex items-center space-x-1.5">
-                                <i class="fa-solid fa-plus"></i>
-                                <span>Nuevo Paciente</span>
-                            </button>
-                        </div>
-                        <div class="w-12 h-12 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-user-plus"></i>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- TAB 2: PACIENTES -->
-            <section id="tab-pacientes" class="tab-content space-y-6 hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="font-heading font-bold text-xl text-slate-900">Directorio de Pacientes</h3>
-                        <p class="text-xs text-slate-500">Búsqueda rápida por RUT o Nombre</p>
-                    </div>
-                    <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-lg shadow-teal-600/20 transition">
-                        <i class="fa-solid fa-user-plus"></i>
-                        <span>+ Registrar Paciente</span>
+                    <button onclick="lockSystem()" title="Bloquear Sistema" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-lock text-xs"></i>
                     </button>
                 </div>
+            </div>
+        </aside>
 
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <input id="patientListSearch" oninput="filterPatientTable()" type="text" placeholder="🔍 Buscar por RUT o Nombre de paciente..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+        <main class="flex-1 bg-slate-100 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
+            <!-- HEADER DEL CONTENIDO -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
+                <div>
+                    <h2 id="currentTabTitle" class="font-heading font-bold text-xl sm:text-2xl text-slate-900">Inicio & Métricas</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Panel de control de atenciones y seguimiento kinesiológico</p>
                 </div>
-
-                <div id="patientsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-400 col-span-full">
-                        Cargando registro de pacientes...
-                    </div>
+                
+                <div class="flex items-center space-x-2">
+                    <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-md transition transform active:scale-95">
+                        <i class="fa-solid fa-user-plus text-xs"></i>
+                        <span>+ Nuevo Paciente</span>
+                    </button>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 3: ATENCIÓN KINÉSICA -->
-            <section id="tab-atencion" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 max-w-2xl mx-auto">
-                    <div>
-                        <h3 class="font-heading font-bold text-xl text-slate-900">Registro de Atención Kinésica</h3>
-                        <p class="text-xs text-slate-500">Guarda la evolución diaria y escala EVA del paciente</p>
-                    </div>
-
-                    <form onsubmit="saveAttention(event)" class="space-y-4 text-xs">
+            <!-- TAB 1: DASHBOARD / INICIO -->
+            <div id="tab-dashboard" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">RUT Paciente</label>
-                            <input id="attPatientRut" type="text" placeholder="12.345.678-9" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono" required>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Pacientes Totales</p>
+                            <p id="statTotalPatients" class="text-2xl font-bold text-slate-900 font-heading">0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-cyan-100 text-cyan-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-stethoscope"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Atenciones Totales</p>
+                            <p id="statTodayAppts" class="text-2xl font-bold text-slate-900 font-heading">0</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4 sm:col-span-2 lg:col-span-1">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Estado Servidor</p>
+                            <p id="statStatusText" class="text-sm font-bold text-emerald-600 font-heading">Conectado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta informativa de bienvenida -->
+                <div class="bg-gradient-to-r from-slate-900 to-teal-950 text-white p-6 rounded-3xl shadow-xl space-y-3 relative overflow-hidden">
+                    <div class="relative z-10 space-y-2">
+                        <span class="bg-teal-500/20 text-teal-300 font-bold text-[10px] px-3 py-1 rounded-full border border-teal-500/30 uppercase tracking-widest">
+                            Ficha Clínica PWA Pro
+                        </span>
+                        <h3 class="font-heading font-bold text-lg sm:text-2xl">¡Bienvenido, Klgo. Cristian Barrera!</h3>
+                        <p class="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+                            Gestión clínica optimizada para el registro de sesiones, medición cuantitativa del dolor mediante escala EVA y envío directo de pautas de ejercicios por WhatsApp.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PACIENTES & RUT -->
+            <div id="tab-pacientes" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                            <input type="text" id="patientListSearch" onkeyup="filterPatientTable()" placeholder="Buscar paciente por Nombre o RUT (Ej: 12.345.678-9)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-user-plus text-xs"></i>
+                            <span>+ Nuevo Paciente</span>
+                        </button>
+                    </div>
+
+                    <div id="patientsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                        <!-- Carga dinámica de tarjetas de pacientes -->
+                    </div>
+                </div>
+
+                <!-- Detalle modal de paciente / Gráfico EVA -->
+                <div id="patientChartDetail" class="hidden bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-lg space-y-4">
+                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+                        <div>
+                            <h3 id="detailPatientName" class="font-heading font-bold text-lg text-slate-900">Nombre Paciente</h3>
+                            <p id="detailPatientRut" class="text-xs text-slate-500 font-mono">RUT: 12.345.678-9</p>
+                        </div>
+                        <button onclick="closePatientChartDetail()" class="text-slate-400 hover:text-slate-700 p-1">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Evolución Escala Dolor (EVA)</h4>
+                            <div class="h-60 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                                <canvas id="evaChartCanvas"></canvas>
+                            </div>
                         </div>
 
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Zona Anatómica / Tratada</label>
-                            <input id="attZone" type="text" placeholder="Ej: Rodilla Derecha, Hombro Izquierdo, L2-L5" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                            <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Histórico de Atenciones</h4>
+                            <div id="patientHistoryContainer" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                                <!-- Histórico de atenciones -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: NUEVA ATENCIÓN KINÉSICA -->
+            <div id="tab-atencion" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-6">
+                    <div>
+                        <h3 class="font-heading font-bold text-lg text-slate-900">Registrar Atención Kinésica</h3>
+                        <p class="text-xs text-slate-500">Guarda la evolución diaria y la escala de dolor EVA del paciente</p>
+                    </div>
+
+                    <form onsubmit="saveAttention(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">RUT Paciente *</label>
+                            <input type="text" id="attPatientRut" required oninput="handleRutInput(this)" placeholder="Ej: 12.345.678-9" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Zona Anatómica / Tratada *</label>
+                            <input type="text" id="attZone" required placeholder="Ej: Hombro Izquierdo / Rodilla Derecha" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block font-bold text-slate-700 mb-1">Dolor EVA Inicial (0-10)</label>
-                                <input id="attEvaInicio" type="number" min="0" max="10" placeholder="0-10" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Dolor EVA Inicial (0-10) *</label>
+                                <input type="number" id="attEvaInicio" min="0" max="10" required placeholder="0-10" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                             </div>
+
                             <div>
-                                <label class="block font-bold text-slate-700 mb-1">Dolor EVA Final (0-10)</label>
-                                <input id="attEvaFin" type="number" min="0" max="10" placeholder="0-10" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Dolor EVA Final (0-10) *</label>
+                                <input type="number" id="attEvaFin" min="0" max="10" required placeholder="0-10" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Notas de Evolución y Tratamiento</label>
-                            <textarea id="attNotes" rows="3" placeholder="Ej: Terapia manual, ultrasonido 1.5 W/cm2, ejercicios de movilidad..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Notas de Evolución y Tratamiento Aplicado</label>
+                            <textarea id="attNotes" rows="3" placeholder="Detalle de la sesión (Terapia manual, electroterapia, ejercicios...)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
                         </div>
 
-                        <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition shadow-lg shadow-teal-600/20 text-xs flex items-center justify-center space-x-2">
+                        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm shadow-lg shadow-teal-600/30 transition flex items-center justify-center space-x-2">
                             <i class="fa-solid fa-floppy-disk"></i>
                             <span>Guardar Atención Kinésica</span>
                         </button>
                     </form>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 4: PAUTAS Y WHATSAPP -->
-            <section id="tab-pautas" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 max-w-2xl mx-auto">
+            <!-- TAB 4: PAUTAS DE EJERCICIO Y WHATSAPP -->
+            <div id="tab-pautas" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-6">
                     <div>
-                        <h3 class="font-heading font-bold text-xl text-slate-900">Generar Pauta de Ejercicios</h3>
-                        <p class="text-xs text-slate-500">Envía las recomendaciones directamente al WhatsApp del paciente</p>
+                        <h3 class="font-heading font-bold text-lg text-slate-900">Enviar Pauta por WhatsApp</h3>
+                        <p class="text-xs text-slate-500">Envía la pauta de ejercicios para el hogar directamente al celular del paciente</p>
                     </div>
 
-                    <div class="space-y-4 text-xs">
+                    <div class="space-y-4">
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Teléfono del Paciente (con o sin +56)</label>
-                            <input id="pautaPhone" type="tel" placeholder="912345678" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono del Paciente (+56...)</label>
+                            <input type="text" id="pautaPhone" placeholder="56912345678" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
                         </div>
 
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Ejercicios e Indicaciones para el Hogar</label>
-                            <textarea id="pautaText" rows="6" placeholder="1. Estiramiento Isquiotibial: 3 series x 30 seg.&#10;2. Puente Glúteo: 3 series x 12 repeticiones.&#10;3. Crioterapia local 15 min al finalizar." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Rutina / Ejercicios Recomendados</label>
+                            <textarea id="pautaText" rows="6" placeholder="1. Estiramiento Isquiotibial: 3 series x 30 seg&#10;2. Puente Glúteo: 3 series x 15 reps&#10;3. Movilidad de Tobillo: 3 series x 12 reps" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
                         </div>
 
-                        <button onclick="sendPautaWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-600/20 text-xs flex items-center justify-center space-x-2">
-                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <button onclick="sendPautaWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
                             <span>Enviar Pauta por WhatsApp</span>
                         </button>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 5: AGENDA -->
-            <section id="tab-agenda" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-center">
-                    <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto text-2xl">
-                        <i class="fa-solid fa-calendar-check"></i>
+            <!-- TAB 5: AGENDA & CITAS -->
+            <div id="tab-agenda" class="tab-content space-y-6 hidden">
+                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
+                    <div class="w-16 h-16 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold">
+                        <i class="fa-regular fa-calendar-check"></i>
                     </div>
-                    <h3 class="font-heading font-bold text-xl text-slate-900">Agenda & Calendario Kinésico</h3>
-                    <p class="text-xs text-slate-500 max-w-md mx-auto">Sincroniza tus horas de consulta directamente con Google Calendar para llevar un control diario de tus atenciones.</p>
-                    <a href="https://calendar.google.com" target="_blank" class="inline-flex items-center space-x-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shadow-md">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        <span>Abrir Google Calendar</span>
-                    </a>
+                    <h3 class="font-heading font-bold text-lg text-slate-900">Módulo de Agendamiento de Citas</h3>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto">Próximamente agendamiento integrado con Google Calendar para control de horarios en el gabinete y visitas.</p>
                 </div>
-            </section>
-        </div>
-    </main>
+            </div>
+        </main>
+    </div>
 
     <!-- MODAL NUEVO PACIENTE -->
-    <div id="newPatientModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 border border-slate-200">
+    <div id="newPatientModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h4 class="font-heading font-bold text-base text-slate-900">Nuevo Registro de Paciente</h4>
-                <button onclick="closeNewPatientModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <h3 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h3>
+                <button onclick="closeNewPatientModal()" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
-            <form onsubmit="savePatient(event)" class="space-y-4 text-xs">
+
+            <form onsubmit="savePatient(event)" class="space-y-3.5">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">RUT Paciente</label>
-                    <input id="patRut" type="text" placeholder="12.345.678-9" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono" required>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">RUT Paciente *</label>
+                    <input type="text" id="patRut" required oninput="handleRutInput(this)" placeholder="Ej: 12.345.678-9" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Nombre Completo</label>
-                    <input id="patName" type="text" placeholder="Juan Pérez" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo *</label>
+                    <input type="text" id="patName" required placeholder="Ej: Juan Pablo Pérez" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Teléfono Móvil</label>
-                    <input id="patPhone" type="tel" placeholder="+56 9 1234 5678" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono Móvil</label>
+                    <input type="text" id="patPhone" placeholder="Ej: +56912345678" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Diagnóstico Kinésico / Motivo</label>
-                    <input id="patDiag" type="text" placeholder="Ej: Esguince Tobillo Grado II" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Diagnóstico Kinésico Principal</label>
+                    <input type="text" id="patDiag" placeholder="Ej: Tendinopatía de Manguito Rotador" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
-                <div class="flex space-x-3 pt-2">
-                    <button type="button" onclick="closeNewPatientModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="w-1/2 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition shadow-lg shadow-teal-600/20">Guardar</button>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeNewPatientModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-md">Guardar Paciente</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL VER DETALLE & EVA CHART -->
-    <div id="patientChartDetail" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
-                <div>
-                    <h4 id="detailPatientName" class="font-heading font-bold text-lg text-slate-900">Paciente</h4>
-                    <p id="detailPatientRut" class="text-xs text-slate-500 font-mono">RUT: -</p>
-                </div>
-                <button onclick="closePatientChartDetail()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <!-- Gráfico Chart.js -->
-            <div>
-                <h5 class="text-xs font-bold text-slate-700 mb-2">Evolución del Dolor (Escala EVA 0-10)</h5>
-                <div class="h-48 bg-slate-50 p-2 rounded-2xl border border-slate-200">
-                    <canvas id="evaChartCanvas"></canvas>
-                </div>
-            </div>
-
-            <!-- Historial Lista -->
-            <div class="space-y-2">
-                <h5 class="text-xs font-bold text-slate-700">Histórico de Atenciones</h5>
-                <div id="patientHistoryContainer" class="space-y-2 max-h-40 overflow-y-auto text-xs">
-                    <!-- Items dinámicos -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT PRINCIPAL DE LA APLICACIÓN -->
+    <!-- SCRIPT DE LÓGICA Y FUNCIONALIDAD COMPLETA -->
     <script>
-        // Credenciales fijadas en código fuente (Solo modificables desde GitHub)
-        const SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_g2DuQccYKSMXvMib32wSfQ_JvniBp8U';
+        // Configuración interna de Servidor Clínico
+        const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
+        const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtocHVqaGZ6Yml4aXdwenVzdW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNjE3OTQsImV4cCI6MjA1NTczNzc5NH0.Z_8r2E17eI59Xy031Nn_6R3S7xJg9K4f_Z0Jk9P1_L8';
 
+        let SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
+        let SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_ANON_KEY;
         let supabaseClient = null;
         let evaChartInstance = null;
         let allPatients = [];
@@ -371,17 +415,12 @@
             if (SUPABASE_URL && SUPABASE_ANON_KEY) {
                 try {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    const statusBadge = document.getElementById('dbStatusBadge');
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Conectado';
-                        statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
-                    }
-                    const statusText = document.getElementById('statStatusText');
-                    if (statusText) statusText.textContent = 'Sistema Clínico Activo';
-                    
+                    document.getElementById('dbStatusBadge').textContent = 'Conectado';
+                    document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
+                    document.getElementById('statStatusText').textContent = 'Conectado al Servidor Clínico';
                     loadPatients();
                 } catch (err) {
-                    console.error('Error init DB:', err);
+                    console.error('Error al conectar con la base de datos:', err);
                     setDisconnectedStatus();
                 }
             } else {
@@ -390,13 +429,9 @@
         }
 
         function setDisconnectedStatus() {
-            const statusBadge = document.getElementById('dbStatusBadge');
-            if (statusBadge) {
-                statusBadge.textContent = 'Desconectado';
-                statusBadge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-bold';
-            }
-            const statusText = document.getElementById('statStatusText');
-            if (statusText) statusText.textContent = 'Sin Conexión';
+            document.getElementById('dbStatusBadge').textContent = 'Desconectado';
+            document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold';
+            document.getElementById('statStatusText').textContent = 'Desconectado';
         }
 
         // Login Handles
@@ -432,11 +467,11 @@
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebarBackdrop');
-            if (sidebar) sidebar.classList.add('-translate-x-full');
-            if (backdrop) backdrop.classList.add('hidden');
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.add('hidden');
         }
 
-        // Tabs Navigation
+        // Tabs
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(el => {
@@ -460,34 +495,73 @@
                 'pautas': 'Pautas de Ejercicio',
                 'agenda': 'Agenda & Citas'
             };
-            const titleElem = document.getElementById('currentTabTitle');
-            if (titleElem) titleElem.textContent = titles[tabId] || 'Panel Clínico';
+            document.getElementById('currentTabTitle').textContent = titles[tabId] || 'Panel Clínico';
 
             if (window.innerWidth < 768) closeSidebar();
         }
 
-        // Modals Patient
+        // Modal Patient
         function openNewPatientModal() {
-            const modal = document.getElementById('newPatientModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            document.getElementById('newPatientModal').classList.remove('hidden');
+            document.getElementById('newPatientModal').classList.add('flex');
         }
 
         function closeNewPatientModal() {
-            const modal = document.getElementById('newPatientModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('newPatientModal').classList.add('hidden');
+            document.getElementById('newPatientModal').classList.remove('flex');
+        }
+
+        // --- FORMATEO Y VALIDACIÓN DE RUT CHILENO (MÓDULO 11) ---
+        function formatChileanRut(rutRaw) {
+            if (!rutRaw) return '';
+            let clean = rutRaw.replace(/[^0-9kK]/g, '').toUpperCase();
+            if (clean.length < 2) return clean;
+            
+            let dv = clean.slice(-1);
+            let body = clean.slice(0, -1);
+            body = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            return `${body}-${dv}`;
+        }
+
+        function validateChileanRut(rutRaw) {
+            let clean = rutRaw.replace(/[^0-9kK]/g, '').toUpperCase();
+            if (clean.length < 8 || clean.length > 9) return false;
+            
+            let dv = clean.slice(-1);
+            let body = clean.slice(0, -1);
+            let sum = 0;
+            let multiplier = 2;
+            
+            for (let i = body.length - 1; i >= 0; i--) {
+                sum += parseInt(body.charAt(i)) * multiplier;
+                multiplier = multiplier === 7 ? 2 : multiplier + 1;
+            }
+            
+            let expectedDv = 11 - (sum % 11);
+            let dvChar = expectedDv === 11 ? '0' : expectedDv === 10 ? 'K' : expectedDv.toString();
+            return dv === dvChar;
+        }
+
+        function handleRutInput(inputElement) {
+            inputElement.value = formatChileanRut(inputElement.value);
         }
 
         async function savePatient(e) {
             e.preventDefault();
-            const rut = document.getElementById('patRut').value.trim();
+            const rawRut = document.getElementById('patRut').value.trim();
+            const rut = formatChileanRut(rawRut);
             const nombre = document.getElementById('patName').value.trim();
             const telefono = document.getElementById('patPhone').value.trim();
             const diagnostico = document.getElementById('patDiag').value.trim();
 
+            if (!rut || !validateChileanRut(rut)) {
+                if (!confirm(`El RUT "${rut}" no parece ser un RUT chileno válido (dígito verificador incorrecto). ¿Deseas guardarlo de todos modos?`)) {
+                    return;
+                }
+            }
+
             if (!supabaseClient) {
-                alert('Por favor verifica la conexión con el servidor en "Configuración".');
+                alert('Por favor verifica la conexión con el servidor.');
                 return;
             }
 
@@ -495,7 +569,7 @@
             if (error) {
                 alert('Error al guardar datos: ' + error.message);
             } else {
-                alert('Paciente guardado exitosamente.');
+                alert(`Paciente ${nombre} (${rut}) guardado exitosamente.`);
                 closeNewPatientModal();
                 loadPatients();
             }
@@ -509,20 +583,16 @@
                 return;
             }
             allPatients = data || [];
-            
-            const statTotal = document.getElementById('statTotalPatients');
-            if (statTotal) statTotal.textContent = allPatients.length;
+            document.getElementById('statTotalPatients').textContent = allPatients.length;
             renderPatientsGrid(allPatients);
             
             // Stats atenciones
             const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true });
-            const statToday = document.getElementById('statTodayAppts');
-            if (statToday) statToday.textContent = count || 0;
+            document.getElementById('statTodayAppts').textContent = count || 0;
         }
 
         function renderPatientsGrid(list) {
             const grid = document.getElementById('patientsGrid');
-            if (!grid) return;
             if (list.length === 0) {
                 grid.innerHTML = `<div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-400 col-span-full">No hay pacientes registrados aún.</div>`;
                 return;
@@ -562,15 +632,15 @@
             
             const historyContainer = document.getElementById('patientHistoryContainer');
             if (!data || data.length === 0) {
-                historyContainer.innerHTML = '<p class="text-slate-400">Sin atenciones registradas.</p>';
+                historyContainer.innerHTML = '<p class="text-slate-400 text-xs">Sin atenciones registradas aún para este paciente.</p>';
                 renderEvaChart([], []);
                 return;
             }
 
             historyContainer.innerHTML = data.map((a, i) => `
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
                     <div>
-                        <span class="font-bold text-slate-800">Sesión #${i+1} - ${a.zona}</span>
+                        <span class="font-bold text-slate-800">Sesión #${a.sesion_num || (i+1)} - ${a.zona}</span>
                         <p class="text-[11px] text-slate-500">${a.fecha || 'Hoy'} - ${a.notas || ''}</p>
                     </div>
                     <div class="text-right">
@@ -579,15 +649,13 @@
                 </div>
             `).join('');
 
-            const labels = data.map((_, i) => 'Sesión ' + (i + 1));
+            const labels = data.map((a, i) => 'Sesión ' + (a.sesion_num || (i + 1)));
             const evaValues = data.map(a => a.eva_fin);
             renderEvaChart(labels, evaValues);
         }
 
         function renderEvaChart(labels, values) {
-            const canvasElem = document.getElementById('evaChartCanvas');
-            if (!canvasElem) return;
-            const ctx = canvasElem.getContext('2d');
+            const ctx = document.getElementById('evaChartCanvas').getContext('2d');
             if (evaChartInstance) evaChartInstance.destroy();
 
             evaChartInstance = new Chart(ctx, {
@@ -595,7 +663,7 @@
                 data: {
                     labels: labels.length ? labels : ['Sin datos'],
                     datasets: [{
-                        label: 'Dolor EVA (0-10)',
+                        label: 'Dolor EVA Final (0-10)',
                         data: values.length ? values : [0],
                         borderColor: '#0d9488',
                         backgroundColor: 'rgba(13, 148, 136, 0.15)',
@@ -621,7 +689,8 @@
 
         async function saveAttention(e) {
             e.preventDefault();
-            const rut_paciente = document.getElementById('attPatientRut').value.trim();
+            const rawRut = document.getElementById('attPatientRut').value.trim();
+            const rut_paciente = formatChileanRut(rawRut);
             const zona = document.getElementById('attZone').value.trim();
             const eva_inicio = parseInt(document.getElementById('attEvaInicio').value);
             const eva_fin = parseInt(document.getElementById('attEvaFin').value);
@@ -632,11 +701,27 @@
                 return;
             }
 
-            const { error } = await supabaseClient.from('atenciones').insert([{ rut_paciente, zona, eva_inicio, eva_fin, notas }]);
+            // Calcular número correlativo de sesión para el paciente
+            const { count } = await supabaseClient
+                .from('atenciones')
+                .select('*', { count: 'exact', head: true })
+                .eq('rut_paciente', rut_paciente);
+
+            const sesion_num = (count || 0) + 1;
+
+            const { error } = await supabaseClient.from('atenciones').insert([{ 
+                rut_paciente, 
+                zona, 
+                eva_inicio, 
+                eva_fin, 
+                notas,
+                sesion_num 
+            }]);
+
             if (error) {
                 alert('Error al guardar atención: ' + error.message);
             } else {
-                alert('Atención kinésica guardada correctamente.');
+                alert('Atención kinésica guardada correctamente (Sesión #' + sesion_num + ' para RUT ' + rut_paciente + ').');
                 document.getElementById('attPatientRut').value = '';
                 document.getElementById('attZone').value = '';
                 document.getElementById('attEvaInicio').value = '';
@@ -650,7 +735,7 @@
             const phone = document.getElementById('pautaPhone').value.trim();
             const text = document.getElementById('pautaText').value.trim();
             if (!text) {
-                alert('Por favor escribe los ejercicios.');
+                alert('Por favor escribe los ejercicios para la pauta.');
                 return;
             }
             const encoded = encodeURIComponent('🏥 *PAUTA DE EJERCICIOS - KLGO. CRISTIAN BARRERA*\n\n' + text);
