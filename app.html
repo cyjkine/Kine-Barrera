@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js for EVA Evolution Graphs -->
+    <!-- Chart.js para gráficos EVA -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -64,13 +64,13 @@
             <div>
                 <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">Acceso Control Kinésico</h2>
                 <p class="text-xs text-teal-400 font-semibold mt-1">Klgo. Cristian Barrera Pinto</p>
-                <p class="text-[11px] sm:text-xs text-slate-400 mt-2">Ingresa tu clave de acceso profesional para gestionar las fichas clínicas.</p>
+                <p class="text-[11px] sm:text-xs text-slate-400 mt-2">Ingresa tu clave de acceso profesional (PIN: 1234) para gestionar las fichas clínicas.</p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div class="relative">
                     <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-500 text-sm"></i>
-                    <input type="password" id="loginPinInput" required placeholder="Clave de acceso (PIN)..."
+                    <input type="password" id="loginPinInput" required placeholder="Clave PIN..."
                            class="w-full pl-11 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm font-mono text-white text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500">
                 </div>
 
@@ -86,7 +86,6 @@
         </div>
     </div>
 
-    <!-- Mobile Top Navigation Header -->
     <header class="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between border-b border-slate-800 sticky top-0 z-40 shrink-0">
         <div class="flex items-center space-x-3">
             <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center font-bold text-sm text-white shadow-md">
@@ -102,13 +101,10 @@
         </button>
     </header>
 
-    <!-- Mobile Backdrop -->
     <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-950/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- Sidebar Navigation Drawer -->
     <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shadow-2xl shrink-0 transition-transform duration-300 transform -translate-x-full md:translate-x-0 h-full">
         <div>
-            <!-- Sidebar Header -->
             <div class="p-5 sm:p-6 flex items-center justify-between border-b border-slate-800">
                 <div class="flex items-center space-x-3">
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center font-bold text-lg text-white shadow-lg shadow-teal-500/20">
@@ -124,7 +120,7 @@
                 </button>
             </div>
 
-            <!-- Navigation Links -->
+            <!-- Menú de Navegación -->
             <nav class="mt-4 sm:mt-6 px-3 space-y-1">
                 <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition bg-teal-600 text-white shadow-lg">
                     <i class="fa-solid fa-chart-pie w-5 text-center text-sm sm:text-base"></i>
@@ -133,7 +129,7 @@
 
                 <button onclick="switchTab('pacientes')" id="nav-pacientes" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition text-slate-400 hover:bg-slate-800">
                     <i class="fa-solid fa-id-card w-5 text-center text-sm sm:text-base"></i>
-                    <span>Buscar por RUT</span>
+                    <span>Pacientes & RUT</span>
                 </button>
 
                 <button onclick="switchTab('atencion')" id="nav-atencion" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-xl font-medium text-xs sm:text-sm transition text-slate-400 hover:bg-slate-800">
@@ -153,26 +149,36 @@
             </nav>
         </div>
 
-        <!-- User Profile & Lock Action -->
-        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs">
-                    <i class="fa-solid fa-user-md"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-semibold text-slate-200 leading-tight">Klgo. Cristian Barrera</p>
-                    <p class="text-[10px] text-teal-400">Kinesiólogo Clínico</p>
-                </div>
-            </div>
-            <button onclick="lockSystem()" class="text-slate-400 hover:text-red-400 p-1.5" title="Bloquear Panel">
-                <i class="fa-solid fa-lock text-xs"></i>
+        <!-- Usuario & Bloqueo -->
+        <div class="p-4 border-t border-slate-800 space-y-2">
+            <button onclick="openConfigModal()" class="w-full text-left px-3 py-2 bg-slate-800/80 hover:bg-slate-800 rounded-xl text-xs text-slate-300 flex items-center justify-between transition">
+                <span class="flex items-center space-x-2">
+                    <i class="fa-solid fa-database text-teal-400"></i>
+                    <span>Config DB</span>
+                </span>
+                <span id="dbStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">Conectado</span>
             </button>
+
+            <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs">
+                        <i class="fa-solid fa-user-md"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-200 leading-tight">Klgo. Cristian Barrera</p>
+                        <p class="text-[10px] text-teal-400">Kinesiólogo Clínico</p>
+                    </div>
+                </div>
+                <button onclick="lockSystem()" class="text-slate-400 hover:text-red-400 p-1.5" title="Bloquear Panel">
+                    <i class="fa-solid fa-lock text-xs"></i>
+                </button>
+            </div>
         </div>
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 custom-scrollbar p-3.5 sm:p-6 min-w-0">
         <header class="flex flex-wrap justify-between items-center gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-200">
-            <div class="flex items-center space-x-3">
+            <div>
                 <h2 id="currentTabTitle" class="font-heading font-bold text-lg sm:text-2xl text-slate-900">Panel de Control Kinésico</h2>
             </div>
 
@@ -192,9 +198,9 @@
             <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="font-heading font-bold text-lg sm:text-2xl">¡Bienvenido, Klgo. Cristian Barrera!</h3>
-                    <p class="text-slate-300 text-xs mt-1">Gestión de atenciones, dolor EVA y agendamiento en tiempo real.</p>
+                    <p class="text-slate-300 text-xs mt-1">Gestión de atenciones, dolor EVA y agendamiento sincronizado en Supabase.</p>
                 </div>
-                <button onclick="switchTab('atencion')" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-4 py-2 sm:py-2.5 rounded-xl text-xs shadow-md transition w-full sm:w-auto text-center">
+                <button onclick="switchTab('atencion')" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition w-full sm:w-auto text-center">
                     + Nueva Atención
                 </button>
             </div>
@@ -205,14 +211,14 @@
                     <p class="font-heading font-bold text-2xl sm:text-3xl text-slate-900 mt-1 sm:mt-2" id="statTotalPatients">0</p>
                 </div>
                 <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Citas Agendadas</p>
+                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Atenciones Totales</p>
                     <p class="font-heading font-bold text-2xl sm:text-3xl text-slate-900 mt-1 sm:mt-2" id="statTodayAppts">0</p>
                 </div>
                 <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm xs:col-span-2 lg:col-span-1">
-                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado Sistema</p>
+                    <p class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado de Conexión</p>
                     <div class="flex items-center space-x-2 mt-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <p class="font-semibold text-xs text-slate-700">Conectado a Supabase</p>
+                        <span id="statStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <p class="font-semibold text-xs text-slate-700" id="statStatusText">Conectado a PostgreSQL</p>
                     </div>
                 </div>
             </div>
@@ -227,9 +233,13 @@
                 <button onclick="openNewPatientModal()" class="w-full sm:w-auto bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Registrar RUT</button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="patientsGrid"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="patientsGrid">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-400 col-span-full">
+                    Cargando pacientes desde Supabase...
+                </div>
+            </div>
             
-            <!-- Patient Detail & EVA Chart Drawer -->
+            <!-- Detalle de Paciente y Gráfico de Evolución EVA -->
             <div id="patientChartDetail" class="hidden bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 space-y-4 sm:space-y-6 shadow-md">
                 <div class="flex justify-between items-center border-b pb-3 sm:pb-4">
                     <div>
@@ -241,14 +251,14 @@
 
                 <div class="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200">
                     <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Curva de Evolución del Dolor (EVA 0-10)</h4>
-                    <div class="h-48 sm:h-64 relative w-full">
+                    <div class="h-56 sm:h-64 relative w-full">
                         <canvas id="evaChartCanvas"></canvas>
                     </div>
                 </div>
 
                 <div class="space-y-3">
                     <h4 class="font-bold text-xs uppercase text-slate-500">Historial de Sesiones Registradas</h4>
-                    <div id="patientHistoryContainer" class="space-y-2 text-xs"></div>
+                    <div id="patientHistoryContainer" class="space-y-2 text-xs max-h-60 overflow-y-auto custom-scrollbar"></div>
                 </div>
             </div>
         </section>
@@ -296,7 +306,7 @@
         <section id="tab-pautas" class="tab-content hidden space-y-4 sm:space-y-6">
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 space-y-4">
                 <h3 class="font-heading font-bold text-lg sm:text-xl text-slate-900">Generador de Pautas para el Hogar</h3>
-                <p class="text-xs text-slate-500">Selecciona al paciente y envía su rutina de ejercicios formateada por WhatsApp.</p>
+                <p class="text-xs text-slate-500">Escribe o pega las indicaciones y envíalas directamente por WhatsApp.</p>
 
                 <div class="space-y-3">
                     <div>
@@ -319,7 +329,7 @@
         <section id="tab-agenda" class="tab-content hidden space-y-4 sm:space-y-6">
             <div class="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 space-y-4">
                 <h3 class="font-heading font-bold text-lg sm:text-xl text-slate-900">Agenda & Citas</h3>
-                <p class="text-xs text-slate-500">Gestión de agendamiento y disponibilidad de atención.</p>
+                <p class="text-xs text-slate-500">Agendamiento de sesiones conectado a PostgreSQL.</p>
                 <div class="p-6 bg-slate-50 rounded-2xl text-center text-slate-500 text-xs">
                     <i class="fa-solid fa-calendar-check text-2xl text-teal-600 mb-2 block"></i>
                     Sincronización de citas conectada a PostgreSQL.
@@ -327,6 +337,29 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal Configuración Supabase -->
+    <div id="configModal" class="fixed inset-0 bg-slate-950/80 z-[90] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-base text-slate-900">Configuración Supabase</h3>
+                <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">SUPABASE URL</label>
+                    <input type="text" id="configUrl" placeholder="https://xxxx.supabase.co" class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">SUPABASE ANON KEY</label>
+                    <input type="password" id="configKey" placeholder="eyJ..." class="w-full px-3 py-2 bg-slate-50 border rounded-xl text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                </div>
+                <button onclick="saveConfigKeys()" class="w-full py-2.5 bg-teal-700 hover:bg-teal-800 text-white font-bold rounded-xl text-xs shadow-md transition">
+                    Guardar y Reconectar
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal Nuevo Paciente -->
     <div id="newPatientModal" class="fixed inset-0 bg-slate-950/80 z-[90] hidden items-center justify-center p-4 backdrop-blur-sm">
@@ -360,7 +393,64 @@
     </div>
 
     <script>
-        // System Auth PIN Check
+        // Supabase Credentials
+        let SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || 'https://khpujhfzbixiwpzusunt.supabase.co';
+        let SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || '';
+        let supabaseClient = null;
+        let evaChartInstance = null;
+        let allPatients = [];
+
+        window.onload = function() {
+            initSupabase();
+        };
+
+        function initSupabase() {
+            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+                try {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    document.getElementById('dbStatusBadge').textContent = 'Conectado';
+                    document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
+                    document.getElementById('statStatusText').textContent = 'Conectado a PostgreSQL';
+                    loadPatients();
+                } catch (err) {
+                    console.error('Error init Supabase:', err);
+                    setDisconnectedStatus();
+                }
+            } else {
+                setDisconnectedStatus();
+            }
+        }
+
+        function setDisconnectedStatus() {
+            document.getElementById('dbStatusBadge').textContent = 'Faltan Llaves';
+            document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold';
+            document.getElementById('statStatusText').textContent = 'Configurar Llaves Supabase';
+        }
+
+        function openConfigModal() {
+            document.getElementById('configUrl').value = SUPABASE_URL;
+            document.getElementById('configKey').value = SUPABASE_ANON_KEY;
+            document.getElementById('configModal').classList.remove('hidden');
+            document.getElementById('configModal').classList.add('flex');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+            document.getElementById('configModal').classList.remove('flex');
+        }
+
+        function saveConfigKeys() {
+            const url = document.getElementById('configUrl').value.trim();
+            const key = document.getElementById('configKey').value.trim();
+            localStorage.setItem('SUPABASE_URL', url);
+            localStorage.setItem('SUPABASE_ANON_KEY', key);
+            SUPABASE_URL = url;
+            SUPABASE_ANON_KEY = key;
+            closeConfigModal();
+            initSupabase();
+        }
+
+        // Login Handles
         function handleLogin(e) {
             e.preventDefault();
             const pin = document.getElementById('loginPinInput').value;
@@ -376,34 +466,28 @@
             document.getElementById('loginPinInput').value = '';
         }
 
-        // Sidebar Navigation Logic for Mobile
+        // Sidebar handles
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebarBackdrop');
-            const icon = document.getElementById('mobileMenuBtnIcon');
-            
             const isHidden = sidebar.classList.contains('-translate-x-full');
             if (isHidden) {
                 sidebar.classList.remove('-translate-x-full');
                 backdrop.classList.remove('hidden');
-                icon.className = 'fa-solid fa-xmark text-lg';
             } else {
                 sidebar.classList.add('-translate-x-full');
                 backdrop.classList.add('hidden');
-                icon.className = 'fa-solid fa-bars text-lg';
             }
         }
 
         function closeSidebar() {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebarBackdrop');
-            const icon = document.getElementById('mobileMenuBtnIcon');
             sidebar.classList.add('-translate-x-full');
             backdrop.classList.add('hidden');
-            if (icon) icon.className = 'fa-solid fa-bars text-lg';
         }
 
-        // Tab Switching Logic
+        // Tabs
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(el => {
@@ -422,20 +506,17 @@
 
             const titles = {
                 'dashboard': 'Inicio & Métricas',
-                'pacientes': 'Buscar por RUT',
+                'pacientes': 'Pacientes & RUT',
                 'atencion': 'Nueva Atención Kinésica',
                 'pautas': 'Pautas de Ejercicio',
                 'agenda': 'Agenda & Citas'
             };
             document.getElementById('currentTabTitle').textContent = titles[tabId] || 'Panel Clínico';
 
-            // Auto close sidebar on mobile screen after selecting tab
-            if (window.innerWidth < 768) {
-                closeSidebar();
-            }
+            if (window.innerWidth < 768) closeSidebar();
         }
 
-        // Modal Handles
+        // Modal Patient
         function openNewPatientModal() {
             document.getElementById('newPatientModal').classList.remove('hidden');
             document.getElementById('newPatientModal').classList.add('flex');
@@ -446,15 +527,165 @@
             document.getElementById('newPatientModal').classList.remove('flex');
         }
 
-        function savePatient(e) {
+        async function savePatient(e) {
             e.preventDefault();
-            alert('Paciente guardado correctamente.');
-            closeNewPatientModal();
+            const rut = document.getElementById('patRut').value.trim();
+            const nombre = document.getElementById('patName').value.trim();
+            const telefono = document.getElementById('patPhone').value.trim();
+            const diagnostico = document.getElementById('patDiag').value.trim();
+
+            if (!supabaseClient) {
+                alert('Configura primero tus llaves de Supabase en "Config DB".');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('pacientes').insert([{ rut, nombre, telefono, diagnostico }]);
+            if (error) {
+                alert('Error al guardar en Supabase: ' + error.message);
+            } else {
+                alert('Paciente guardado exitosamente.');
+                closeNewPatientModal();
+                loadPatients();
+            }
         }
 
-        function saveAttention(e) {
+        async function loadPatients() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient.from('pacientes').select('*').order('created_at', { ascending: false });
+            if (error) {
+                console.error(error);
+                return;
+            }
+            allPatients = data || [];
+            document.getElementById('statTotalPatients').textContent = allPatients.length;
+            renderPatientsGrid(allPatients);
+            
+            // Stats atenciones
+            const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true });
+            document.getElementById('statTodayAppts').textContent = count || 0;
+        }
+
+        function renderPatientsGrid(list) {
+            const grid = document.getElementById('patientsGrid');
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-400 col-span-full">No hay pacientes registrados aún.</div>`;
+                return;
+            }
+
+            grid.innerHTML = list.map(p => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-900">${p.nombre}</h4>
+                            <p class="text-xs text-slate-500 font-mono">${p.rut}</p>
+                        </div>
+                        <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full font-semibold">Activo</span>
+                    </div>
+                    <p class="text-xs text-slate-600 line-clamp-1"><i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${p.diagnostico || 'Sin diagnóstico registrado'}</p>
+                    <button onclick="viewPatientDetail('${p.rut}', '${p.nombre}')" class="w-full py-1.5 bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Ver Evolución EVA</span>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function filterPatientTable() {
+            const query = document.getElementById('patientListSearch').value.toLowerCase();
+            const filtered = allPatients.filter(p => p.nombre.toLowerCase().includes(query) || p.rut.toLowerCase().includes(query));
+            renderPatientsGrid(filtered);
+        }
+
+        async function viewPatientDetail(rut, nombre) {
+            document.getElementById('patientChartDetail').classList.remove('hidden');
+            document.getElementById('detailPatientName').textContent = nombre;
+            document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
+
+            if (!supabaseClient) return;
+            const { data } = await supabaseClient.from('atenciones').select('*').eq('rut_paciente', rut).order('created_at', { ascending: true });
+            
+            const historyContainer = document.getElementById('patientHistoryContainer');
+            if (!data || data.length === 0) {
+                historyContainer.innerHTML = '<p class="text-slate-400">Sin atenciones registradas.</p>';
+                renderEvaChart([], []);
+                return;
+            }
+
+            historyContainer.innerHTML = data.map((a, i) => `
+                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-slate-800">Sesión #${i+1} - ${a.zona}</span>
+                        <p class="text-[11px] text-slate-500">${a.fecha || 'Hoy'} - ${a.notas || ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const labels = data.map((_, i) => 'Sesión ' + (i + 1));
+            const evaValues = data.map(a => a.eva_fin);
+            renderEvaChart(labels, evaValues);
+        }
+
+        function renderEvaChart(labels, values) {
+            const ctx = document.getElementById('evaChartCanvas').getContext('2d');
+            if (evaChartInstance) evaChartInstance.destroy();
+
+            evaChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Sin datos'],
+                    datasets: [{
+                        label: 'Dolor EVA (0-10)',
+                        data: values.length ? values : [0],
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13, 148, 136, 0.15)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#0f766e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 10, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function closePatientChartDetail() {
+            document.getElementById('patientChartDetail').classList.add('hidden');
+        }
+
+        async function saveAttention(e) {
             e.preventDefault();
-            alert('Atención kinésica guardada correctamente.');
+            const rut_paciente = document.getElementById('attPatientRut').value.trim();
+            const zona = document.getElementById('attZone').value.trim();
+            const eva_inicio = parseInt(document.getElementById('attEvaInicio').value);
+            const eva_fin = parseInt(document.getElementById('attEvaFin').value);
+            const notas = document.getElementById('attNotes').value.trim();
+
+            if (!supabaseClient) {
+                alert('Configura primero tus llaves de Supabase en "Config DB".');
+                return;
+            }
+
+            const { error } = await supabaseClient.from('atenciones').insert([{ rut_paciente, zona, eva_inicio, eva_fin, notas }]);
+            if (error) {
+                alert('Error al guardar atención: ' + error.message);
+            } else {
+                alert('Atención kinésica guardada correctamente.');
+                document.getElementById('attPatientRut').value = '';
+                document.getElementById('attZone').value = '';
+                document.getElementById('attEvaInicio').value = '';
+                document.getElementById('attEvaFin').value = '';
+                document.getElementById('attNotes').value = '';
+                loadPatients();
+            }
         }
 
         function sendPautaWhatsApp() {
@@ -466,14 +697,6 @@
             }
             const encoded = encodeURIComponent('🏥 *PAUTA DE EJERCICIOS - KLGO. CRISTIAN BARRERA*\n\n' + text);
             window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
-        }
-
-        function closePatientChartDetail() {
-            document.getElementById('patientChartDetail').classList.add('hidden');
-        }
-
-        function filterPatientTable() {
-            // Placeholder filter logic
         }
     </script>
 </body>
