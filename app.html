@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KineControl PWA | Control Kinésico - Klgo. Cristian Barrera Pinto</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for EVA Evolution Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        kine: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            dark: '#0f4c81'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print {
+            body * { visibility: hidden !important; }
+            #printableArea, #printableArea * { visibility: visible !important; }
+            #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 font-sans flex flex-col md:flex-row antialiased select-none">
+
+    <div id="loginOverlay" class="fixed inset-0 bg-slate-950/95 z-[100] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl text-center space-y-6">
+            <div class="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center font-bold text-2xl text-white shadow-xl shadow-teal-500/20">
+                <i class="fa-solid fa-user-lock"></i>
+            </div>
+            
+            <div>
+                <h2 class="font-heading font-bold text-2xl text-white">Acceso Control Kinésico</h2>
+                <p class="text-xs text-teal-400 font-semibold mt-1">Klgo. Cristian Barrera Pinto</p>
+                <p class="text-xs text-slate-400 mt-2">Ingresa tu clave de acceso profesional para gestionar las fichas clínicas.</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="relative">
+                    <i class="fa-solid fa-key absolute left-4 top-3.5 text-slate-500 text-sm"></i>
+                    <input type="password" id="loginPinInput" required placeholder="Clave de acceso (PIN)..."
+                           class="w-full pl-11 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-sm font-mono text-white text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-teal-600/30 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-unlock"></i>
+                    <span>Iniciar Sesión Clínica</span>
+                </button>
+            </form>
+
+            <div class="pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex justify-center items-center">
+                <a href="index.html" class="text-slate-400 hover:text-white transition">← Volver a la Web Pública</a>
+            </div>
+        </div>
+    </div>
+
+    <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shadow-2xl shrink-0 h-full">
+        <div>
+            <!-- Sidebar Header -->
+            <div class="p-6 flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-500 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-teal-500/20">
+                        <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-heading font-bold text-lg text-white leading-tight">Control Kinésico</h1>
+                        <p class="text-[10px] text-teal-400 font-medium">PWA Clínica</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="mt-6 px-3 space-y-1">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition bg-teal-600 text-white shadow-lg">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-base"></i>
+                    <span>Inicio & Métricas</span>
+                </button>
+
+                <button onclick="switchTab('pacientes')" id="nav-pacientes" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-id-card w-5 text-center text-base"></i>
+                    <span>Buscar por RUT</span>
+                </button>
+
+                <button onclick="switchTab('atencion')" id="nav-atencion" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-notes-medical w-5 text-center text-base"></i>
+                    <span>Nueva Atención</span>
+                </button>
+
+                <button onclick="switchTab('pautas')" id="nav-pautas" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-dumbbell w-5 text-center text-base"></i>
+                    <span>Pautas de Ejercicio</span>
+                </button>
+
+                <button onclick="switchTab('agenda')" id="nav-agenda" class="nav-item w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-medium text-sm transition text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-calendar-days w-5 text-center text-base"></i>
+                    <span>Agenda & Calendario</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- User Profile & Lock Action -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-teal-400 text-xs">
+                    <i class="fa-solid fa-user-md"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-200 leading-tight">Klgo. Cristian Barrera</p>
+                    <p class="text-[10px] text-teal-400">Kinesiólogo Clínico</p>
+                </div>
+            </div>
+            <button onclick="lockSystem()" class="text-slate-400 hover:text-red-400 p-2" title="Bloquear Panel">
+                <i class="fa-solid fa-lock text-sm"></i>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 custom-scrollbar p-6">
+        <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+            <div class="flex items-center space-x-4">
+                <h2 id="currentTabTitle" class="font-heading font-bold text-2xl text-slate-900">Panel de Control Kinésico</h2>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-3.5 py-2 rounded-xl text-xs flex items-center space-x-2 transition">
+                    <i class="fa-solid fa-globe"></i>
+                    <span>Ver Web Pública</span>
+                </a>
+                <button onclick="openNewPatientModal()" class="bg-teal-700 hover:bg-teal-800 text-white font-medium px-4 py-2 rounded-xl text-xs flex items-center space-x-2 shadow-md transition">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Nuevo Paciente</span>
+                </button>
+            </div>
+        </header>
+
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-900 rounded-3xl p-6 text-white shadow-xl flex justify-between items-center">
+                <div>
+                    <h3 class="font-heading font-bold text-2xl">¡Bienvenido, Klgo. Cristian Barrera Pinto!</h3>
+                    <p class="text-slate-300 text-xs mt-1">Gestión de atenciones, dolor EVA y agendamiento en tiempo real.</p>
+                </div>
+                <button onclick="switchTab('atencion')" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition">
+                    + Nueva Atención
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold text-slate-500 uppercase">Pacientes Registrados</p>
+                    <p class="font-heading font-bold text-3xl text-slate-900 mt-2" id="statTotalPatients">0</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold text-slate-500 uppercase">Citas Agendadas</p>
+                    <p class="font-heading font-bold text-3xl text-slate-900 mt-2" id="statTodayAppts">3</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <p class="text-xs font-semibold text-slate-500 uppercase">Pautas Enviadas</p>
+                    <p class="font-heading font-bold text-3xl text-slate-900 mt-2">18</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-pacientes" class="tab-content hidden space-y-6">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="relative w-full md:w-80">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="patientListSearch" placeholder="Filtrar por RUT o Nombre..." class="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs w-full focus:outline-none focus:ring-2 focus:ring-teal-500" onkeyup="filterPatientTable()">
+                </div>
+                <button onclick="openNewPatientModal()" class="bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition">+ Registrar RUT</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="patientsGrid"></div>
+            
+            <!-- Patient Detail & EVA Chart Drawer -->
+            <div id="patientChartDetail" class="hidden bg-white p-6 rounded-3xl border border-slate-200 space-y-6 shadow-md">
+                <div class="flex justify-between items-center border-b pb-4">
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-900" id="detailPatientName">Nombre Paciente</h3>
+                        <p class="text-xs text-slate-500 font-mono" id="detailPatientRut">RUT: --</p>
+                    </div>
+                    <button onclick="closePatientChartDetail()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Curva de Evolución del Dolor (EVA 0-10)</h4>
+                    <div class="h-64">
+                        <canvas id="evaChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="font-bold text-xs uppercase text-slate-500">Historial de Sesiones Registradas</h4>
+                    <div id="patientHistoryContainer" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-atencion" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200">
+                <h3 class="font-heading font-bold text-xl text-slate-900 mb-4">Registro de Atención Kinésica Diaria</h3>
+                <
