@@ -134,17 +134,9 @@
                 </nav>
             </div>
 
-            <!-- Footer Sidebar con estado e información del profesional -->
-            <div class="p-4 border-t border-slate-800/80 bg-slate-900/50 space-y-3">
-                <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                        <span class="text-[11px] font-medium text-slate-300">Base de Datos</span>
-                    </div>
-                    <span id="dbStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">Conectado</span>
-                </div>
-
-                <div class="flex items-center justify-between pt-1">
+            <!-- Footer Sidebar con información del profesional -->
+            <div class="p-4 border-t border-slate-800/80 bg-slate-900/50">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-2.5">
                         <div class="w-8 h-8 rounded-full bg-teal-800 text-teal-200 font-bold text-xs flex items-center justify-center border border-teal-600">
                             CB
@@ -154,7 +146,7 @@
                             <p class="text-[10px] text-slate-400">Kinesiólogo Clínico</p>
                         </div>
                     </div>
-                    <button onclick="lockSystem()" title="Bloquear Sistema" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    <button onclick="lockSystem()" title="Bloquear Sistema" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
                         <i class="fa-solid fa-lock text-xs"></i>
                     </button>
                 </div>
@@ -203,11 +195,11 @@
 
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4 sm:col-span-2 lg:col-span-1">
                         <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-server"></i>
+                            <i class="fa-solid fa-calendar-check"></i>
                         </div>
                         <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase">Estado Servidor</p>
-                            <p id="statStatusText" class="text-sm font-bold text-emerald-600 font-heading">Conectado</p>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">Atenciones de este Mes</p>
+                            <p id="statMonthAppts" class="text-2xl font-bold text-teal-700 font-heading">0</p>
                         </div>
                     </div>
                 </div>
@@ -415,23 +407,11 @@
             if (SUPABASE_URL && SUPABASE_ANON_KEY) {
                 try {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    document.getElementById('dbStatusBadge').textContent = 'Conectado';
-                    document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
-                    document.getElementById('statStatusText').textContent = 'Conectado al Servidor Clínico';
                     loadPatients();
                 } catch (err) {
                     console.error('Error al conectar con la base de datos:', err);
-                    setDisconnectedStatus();
                 }
-            } else {
-                setDisconnectedStatus();
             }
-        }
-
-        function setDisconnectedStatus() {
-            document.getElementById('dbStatusBadge').textContent = 'Desconectado';
-            document.getElementById('dbStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold';
-            document.getElementById('statStatusText').textContent = 'Desconectado';
         }
 
         // Login Handles
@@ -586,9 +566,19 @@
             document.getElementById('statTotalPatients').textContent = allPatients.length;
             renderPatientsGrid(allPatients);
             
-            // Stats atenciones
+            // Stats atenciones totales
             const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true });
             document.getElementById('statTodayAppts').textContent = count || 0;
+
+            // Stats atenciones del mes actual
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const { count: monthCount } = await supabaseClient
+                .from('atenciones')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', firstDayOfMonth);
+            
+            document.getElementById('statMonthAppts').textContent = monthCount || 0;
         }
 
         function renderPatientsGrid(list) {
