@@ -1,736 +1,1427 @@
 <!DOCTYPE html>
 <html lang="es" class="h-full bg-slate-100">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KineControl PWA | Control Kinésico - Klgo. Cristian Barrera Pinto</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js para gráficos EVA -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Supabase JS Client v2 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="PWA clínica CyJ Kinesiología">
+  <title>CyJ Kinesiología | Panel Clínico</title>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        heading: ['Poppins', 'sans-serif'],
-                    }
-                }
-            }
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Poppins', 'sans-serif']
+          }
         }
-    </script>
-    <style>
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
-    </style>
+      }
+    };
+  </script>
+
+  <style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .toast { transform: translateY(20px); opacity: 0; pointer-events: none; transition: .2s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  </style>
 </head>
-<body class="h-full text-slate-800 font-sans flex flex-col antialiased selection:bg-teal-500 selection:text-white overflow-x-hidden">
 
-    <!-- OVERLAY DE BLOQUEO DE SEGURIDAD (PIN) -->
-    <div id="loginOverlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-6 transform transition-all">
-            <div class="w-16 h-16 bg-gradient-to-tr from-teal-600 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto text-white text-2xl shadow-lg shadow-teal-500/30">
-                <i class="fa-solid fa-user-doctor"></i>
+<body class="h-full bg-slate-100 text-slate-800 font-sans antialiased overflow-hidden">
+
+<!-- LOGIN / BLOQUEO DE UI -->
+<div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg">
+      <i class="fa-solid fa-user-doctor"></i>
+    </div>
+    <h1 class="mt-5 text-center font-heading font-bold text-xl text-slate-900">Panel Clínico</h1>
+    <p class="mt-1 text-center text-xs text-slate-500">CyJ Kinesiología · Klgo. Cristian Barrera Pinto</p>
+
+    <form onsubmit="handleLogin(event)" class="mt-6 space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Clave de acceso</label>
+        <input id="loginPinInput" type="password" autocomplete="current-password" required
+          class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-teal-500">
+      </div>
+      <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition">
+        Ingresar
+      </button>
+    </form>
+    <p class="mt-5 text-center text-[10px] text-slate-400">
+      El bloqueo de esta pantalla es una barrera de interfaz; la seguridad real debe descansar en Supabase Auth + RLS.
+    </p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast fixed bottom-5 right-5 z-[120] max-w-sm bg-slate-900 text-white rounded-2xl px-4 py-3 shadow-2xl text-xs">
+  <div class="flex items-start gap-3">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-teal-400 mt-0.5"></i>
+    <p id="toastMessage"></p>
+  </div>
+</div>
+
+<header class="md:hidden h-14 shrink-0 bg-slate-950 text-white flex items-center justify-between px-4 border-b border-slate-800 z-40">
+  <button onclick="toggleSidebar()" class="p-2 text-slate-300" aria-label="Abrir menú"><i class="fa-solid fa-bars"></i></button>
+  <div class="font-heading font-bold text-sm">CyJ Kinesiología</div>
+  <button onclick="lockSystem()" class="p-2 text-slate-300" aria-label="Bloquear"><i class="fa-solid fa-lock"></i></button>
+</header>
+
+<div class="flex h-[calc(100vh-0px)] md:h-full">
+  <div id="sidebarBackdrop" onclick="closeSidebar()" class="hidden fixed inset-0 bg-slate-950/60 z-40 md:hidden"></div>
+
+  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
+    <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
+      <div class="flex items-center gap-3 pb-5 border-b border-slate-800">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center text-white">
+          <i class="fa-solid fa-person-walking"></i>
+        </div>
+        <div>
+          <h2 class="font-heading font-bold text-sm text-white">CyJ Kinesiología</h2>
+          <p class="text-[10px] text-teal-400">Panel clínico PWA</p>
+        </div>
+      </div>
+
+      <nav class="mt-6 space-y-1.5">
+        <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-item active w-full flex gap-3 items-center px-3 py-2.5 rounded-xl text-xs font-semibold bg-teal-600 text-white">
+          <i class="fa-solid fa-chart-pie w-5 text-center"></i>Inicio & Métricas
+        </button>
+        <button id="nav-pacientes" onclick="switchTab('pacientes')" class="nav-item w-full flex gap-3 items-center px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-id-card w-5 text-center"></i>Pacientes
+        </button>
+        <button id="nav-atencion" onclick="switchTab('atencion')" class="nav-item w-full flex gap-3 items-center px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-circle-plus w-5 text-center"></i>Nueva Atención
+        </button>
+        <button id="nav-pautas" onclick="switchTab('pautas')" class="nav-item w-full flex gap-3 items-center px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+          <i class="fa-solid fa-dumbbell w-5 text-center"></i>Pautas de Ejercicio
+        </button>
+        <button id="nav-agenda" onclick="switchTab('agenda')" class="nav-item w-full flex gap-3 items-center px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+          <i class="fa-regular fa-calendar-check w-5 text-center"></i>Agenda & Citas
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800 bg-slate-900/60">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs font-bold text-white">Klgo. Cristian Barrera</p>
+          <p class="text-[10px] text-slate-400">Kinesiólogo Clínico</p>
+        </div>
+        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-white"><i class="fa-solid fa-lock"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 min-w-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200">
+      <div>
+        <h1 id="currentTabTitle" class="font-heading font-bold text-xl sm:text-2xl text-slate-900">Inicio & Métricas</h1>
+        <p id="currentTabSubtitle" class="text-xs sm:text-sm text-slate-500">Seguimiento clínico y gestión de pacientes.</p>
+      </div>
+      <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md">
+        <i class="fa-solid fa-user-plus mr-1"></i>Nuevo paciente
+      </button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Pacientes</p>
+          <p id="statTotalPatients" class="mt-1 text-3xl font-heading font-bold text-slate-900">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones</p>
+          <p id="statTotalAttentions" class="mt-1 text-3xl font-heading font-bold text-slate-900">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones del mes</p>
+          <p id="statMonthAttentions" class="mt-1 text-3xl font-heading font-bold text-teal-700">0</p>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] font-bold text-slate-500 uppercase">Citas próximas</p>
+          <p id="statUpcomingAppointments" class="mt-1 text-3xl font-heading font-bold text-cyan-700">0</p>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div class="bg-gradient-to-br from-slate-950 to-teal-950 text-white rounded-3xl p-6 shadow-xl">
+          <span class="inline-flex px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-[10px] font-bold uppercase tracking-widest">PWA clínica</span>
+          <h2 class="mt-3 font-heading font-bold text-xl sm:text-2xl">Centro de control clínico</h2>
+          <p class="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Registra la evolución, prepara pautas, agenda citas y genera recordatorios para pacientes desde una única interfaz.
+          </p>
+        </div>
+        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base">Próximas citas</h3>
+            <button onclick="switchTab('agenda')" class="text-xs font-bold text-teal-700">Ver agenda</button>
+          </div>
+          <div id="dashboardUpcoming" class="mt-4 space-y-2">
+            <p class="text-xs text-slate-400">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PACIENTES -->
+    <section id="tab-pacientes" class="tab-content hidden space-y-6">
+      <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+            <input id="patientListSearch" oninput="filterPatientTable()" placeholder="Buscar por nombre o RUT..."
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+          </div>
+          <button onclick="openNewPatientModal()" class="bg-teal-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs">
+            <i class="fa-solid fa-user-plus mr-1"></i>Nuevo paciente
+          </button>
+        </div>
+        <div id="patientsGrid" class="mt-5 grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+
+      <div id="patientChartDetail" class="hidden bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-lg">
+        <div class="flex items-start justify-between pb-3 border-b border-slate-200">
+          <div>
+            <h3 id="detailPatientName" class="font-heading font-bold text-lg text-slate-900"></h3>
+            <p id="detailPatientRut" class="text-xs text-slate-500 font-mono"></p>
+          </div>
+          <button onclick="closePatientChartDetail()" class="text-slate-400 p-2"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="mt-5 grid lg:grid-cols-2 gap-6">
+          <div>
+            <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Evolución EVA final</h4>
+            <div class="h-64 bg-slate-50 rounded-2xl border border-slate-200 p-3"><canvas id="evaChartCanvas"></canvas></div>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Histórico</h4>
+            <div id="patientHistoryContainer" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATENCION -->
+    <section id="tab-atencion" class="tab-content hidden">
+      <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="font-heading font-bold text-lg">Registrar atención kinésica</h2>
+          <p class="text-xs text-slate-500 mt-1">Registro de evolución y dolor EVA.</p>
+        </div>
+
+        <form onsubmit="saveAttention(event)" class="mt-6 space-y-4">
+          <div>
+            <label class="label">RUT paciente *</label>
+            <input id="attPatientRut" required oninput="handleRutInput(this)" class="input font-mono" placeholder="12.345.678-9">
+          </div>
+          <div>
+            <label class="label">Zona anatómica / tratada *</label>
+            <input id="attZone" required class="input" placeholder="Ej. Hombro izquierdo">
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label">EVA inicial (0–10) *</label>
+              <input id="attEvaInicio" type="number" min="0" max="10" required class="input">
             </div>
             <div>
-                <h2 class="font-heading font-bold text-xl text-slate-900">Control Kinésico</h2>
-                <p class="text-xs text-slate-500 mt-1">Klgo. Cristian Barrera Pinto</p>
+              <label class="label">EVA final (0–10) *</label>
+              <input id="attEvaFin" type="number" min="0" max="10" required class="input">
             </div>
-            
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5 text-left">Contraseña de Acceso Clínico</label>
-                    <input type="password" id="loginPinInput" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center font-bold tracking-widest text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 text-base">
-                </div>
-                <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-teal-600/30 transition">
-                    Ingresar al Panel
-                </button>
-            </form>
-            <p class="text-[11px] text-slate-400">Protección de Datos Médicos Sensibles</p>
-        </div>
-    </div>
+          </div>
+          <div>
+            <label class="label">Notas de evolución</label>
+            <textarea id="attNotes" rows="5" class="input" placeholder="Intervenciones, respuesta, educación, plan..."></textarea>
+          </div>
+          <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm">
+            <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar atención
+          </button>
+        </form>
+      </div>
+    </section>
 
-    <!-- BARRA SUPERIOR MÓVIL (HEADER) -->
-    <header class="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 border-b border-slate-800 shadow-md">
-        <div class="flex items-center space-x-3">
-            <button onclick="toggleSidebar()" class="p-2 text-slate-300 hover:text-white focus:outline-none" aria-label="Abrir Menú">
-                <i class="fa-solid fa-bars text-lg"></i>
+    <!-- PAUTAS -->
+    <section id="tab-pautas" class="tab-content hidden space-y-6">
+      <div class="grid xl:grid-cols-[1fr_1.2fr] gap-6">
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="font-heading font-bold">Biblioteca de ejercicios</h2>
+              <p class="text-xs text-slate-500 mt-1">Selecciona ejercicios del catálogo cargado desde Supabase.</p>
+            </div>
+            <button onclick="loadExercises()" class="text-xs font-bold text-teal-700"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+          <input id="exerciseSearch" oninput="filterExercises()" class="input mt-4" placeholder="Buscar ejercicio o zona...">
+          <div id="exerciseLibrary" class="mt-4 space-y-2 max-h-[520px] overflow-y-auto custom-scrollbar"></div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+          <h2 class="font-heading font-bold">Pauta personalizada</h2>
+          <p class="text-xs text-slate-500 mt-1">Puedes combinar ejercicios del catálogo y añadir indicaciones manuales.</p>
+
+          <div class="mt-4 grid sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Teléfono WhatsApp</label>
+              <input id="pautaPhone" class="input font-mono" placeholder="56912345678">
+            </div>
+            <div>
+              <label class="label">Nombre paciente</label>
+              <input id="pautaPatientName" class="input" placeholder="Nombre del paciente">
+            </div>
+          </div>
+
+          <div id="selectedExercises" class="mt-4 space-y-2"></div>
+
+          <textarea id="pautaExtra" rows="4" class="input mt-4" placeholder="Indicaciones adicionales, frecuencia semanal, precauciones..."></textarea>
+
+          <div class="mt-4 grid sm:grid-cols-2 gap-3">
+            <button onclick="copyRoutineText()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-xs">
+              <i class="fa-regular fa-copy mr-1"></i>Copiar pauta
             </button>
-            <div class="flex items-center space-x-2">
-                <div class="w-7 h-7 bg-teal-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                    <i class="fa-solid fa-notes-medical"></i>
-                </div>
-                <span class="font-heading font-bold text-sm tracking-wide text-white">KineControl</span>
-            </div>
+            <button onclick="sendPautaWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs">
+              <i class="fa-brands fa-whatsapp mr-1"></i>Enviar WhatsApp
+            </button>
+          </div>
         </div>
-        <button onclick="lockSystem()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
-            <i class="fa-solid fa-lock text-teal-400"></i>
-        </button>
-    </header>
+      </div>
+    </section>
 
-    <div class="flex flex-1 h-full overflow-hidden relative">
-        <!-- BACKDROP MÓVIL -->
-        <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-900/60 z-40 hidden md:hidden transition-opacity"></div>
+    <!-- AGENDA -->
+    <section id="tab-agenda" class="tab-content hidden space-y-6">
+      <div class="grid xl:grid-cols-[1fr_1.4fr] gap-6">
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+          <h2 class="font-heading font-bold">Nueva cita</h2>
+          <p class="text-xs text-slate-500 mt-1">Genera acciones para Google Calendar e ICS con alarmas de 24 h y 1 h.</p>
 
-        <!-- BARRA LATERAL (SIDEBAR) -->
-        <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col justify-between border-r border-slate-800 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out h-full">
-            <div class="p-5 space-y-6 overflow-y-auto custom-scrollbar">
-                <!-- Branding logo -->
-                <div class="flex items-center space-x-3 pb-4 border-b border-slate-800/80">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center text-white font-bold shadow-md shadow-teal-500/20">
-                        <i class="fa-solid fa-user-doctor text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-heading font-bold text-base text-white leading-tight">Control Kinésico</h1>
-                        <p class="text-[10px] text-teal-400 font-medium">PWA Clínica Pro</p>
-                    </div>
-                </div>
-
-                <!-- Navigation Links -->
-                <nav class="space-y-1.5">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-teal-600 text-white shadow-lg transition">
-                        <i class="fa-solid fa-chart-pie text-base w-5 text-center"></i>
-                        <span>Inicio & Métricas</span>
-                    </button>
-
-                    <button onclick="switchTab('pacientes')" id="nav-pacientes" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-id-card text-base w-5 text-center"></i>
-                        <span>Buscar por RUT</span>
-                    </button>
-
-                    <button onclick="switchTab('atencion')" id="nav-atencion" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-circle-plus text-base w-5 text-center"></i>
-                        <span>Nueva Atención</span>
-                    </button>
-
-                    <button onclick="switchTab('pautas')" id="nav-pautas" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-dumbell text-base w-5 text-center"></i>
-                        <span>Pautas de Ejercicio</span>
-                    </button>
-
-                    <button onclick="switchTab('agenda')" id="nav-agenda" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition">
-                        <i class="fa-regular fa-calendar-check text-base w-5 text-center"></i>
-                        <span>Agenda & Citas</span>
-                    </button>
-                </nav>
+          <form onsubmit="saveAppointment(event)" class="mt-5 space-y-4">
+            <div>
+              <label class="label">Paciente *</label>
+              <select id="apptPatientRut" required class="input"></select>
             </div>
-
-            <!-- Footer Sidebar con información del profesional -->
-            <div class="p-4 border-t border-slate-800/80 bg-slate-900/50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2.5">
-                        <div class="w-8 h-8 rounded-full bg-teal-800 text-teal-200 font-bold text-xs flex items-center justify-center border border-teal-600">
-                            CB
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-white leading-tight">Klgo. Cristian Barrera</p>
-                            <p class="text-[10px] text-slate-400">Kinesiólogo Clínico</p>
-                        </div>
-                    </div>
-                    <button onclick="lockSystem()" title="Bloquear Sistema" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition">
-                        <i class="fa-solid fa-lock text-xs"></i>
-                    </button>
-                </div>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label">Fecha *</label>
+                <input id="apptDate" type="date" required class="input">
+              </div>
+              <div>
+                <label class="label">Hora *</label>
+                <input id="apptTime" type="time" required class="input">
+              </div>
             </div>
-        </aside>
-
-        <!-- ÁREA DE CONTENIDO PRINCIPAL -->
-        <main class="flex-1 bg-slate-100 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
-            <!-- HEADER DEL CONTENIDO -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
-                <div>
-                    <h2 id="currentTabTitle" class="font-heading font-bold text-xl sm:text-2xl text-slate-900">Inicio & Métricas</h2>
-                    <p class="text-xs sm:text-sm text-slate-500">Panel de control de atenciones y seguimiento kinesiológico</p>
-                </div>
-                
-                <div class="flex items-center space-x-2">
-                    <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-2 shadow-md transition transform active:scale-95">
-                        <i class="fa-solid fa-user-plus text-xs"></i>
-                        <span>+ Nuevo Paciente</span>
-                    </button>
-                </div>
+            <div>
+              <label class="label">Duración</label>
+              <select id="apptDuration" class="input">
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60" selected>60 minutos</option>
+                <option value="90">90 minutos</option>
+              </select>
             </div>
-
-            <!-- TAB 1: DASHBOARD / INICIO -->
-            <div id="tab-dashboard" class="tab-content space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                        <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase">Pacientes Totales</p>
-                            <p id="statTotalPatients" class="text-2xl font-bold text-slate-900 font-heading">0</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4">
-                        <div class="w-12 h-12 bg-cyan-100 text-cyan-700 rounded-xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-stethoscope"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase">Atenciones Totales</p>
-                            <p id="statTodayAppts" class="text-2xl font-bold text-slate-900 font-heading">0</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4 sm:col-span-2 lg:col-span-1">
-                        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-500 uppercase">Atenciones de este Mes</p>
-                            <p id="statMonthAppts" class="text-2xl font-bold text-teal-700 font-heading">0</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tarjeta informativa de bienvenida -->
-                <div class="bg-gradient-to-r from-slate-900 to-teal-950 text-white p-6 rounded-3xl shadow-xl space-y-3 relative overflow-hidden">
-                    <div class="relative z-10 space-y-2">
-                        <span class="bg-teal-500/20 text-teal-300 font-bold text-[10px] px-3 py-1 rounded-full border border-teal-500/30 uppercase tracking-widest">
-                            Ficha Clínica PWA Pro
-                        </span>
-                        <h3 class="font-heading font-bold text-lg sm:text-2xl">¡Bienvenido, Klgo. Cristian Barrera!</h3>
-                        <p class="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-                            Gestión clínica optimizada para el registro de sesiones, medición cuantitativa del dolor mediante escala EVA y envío directo de pautas de ejercicios por WhatsApp.
-                        </p>
-                    </div>
-                </div>
+            <div>
+              <label class="label">Motivo / zona</label>
+              <input id="apptReason" class="input" placeholder="Ej. Evaluación hombro">
             </div>
+            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm">
+              <i class="fa-regular fa-calendar-plus mr-2"></i>Guardar y preparar recordatorio
+            </button>
+          </form>
 
-            <!-- TAB 2: PACIENTES & RUT -->
-            <div id="tab-pacientes" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-                        <div class="relative flex-1">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
-                            <input type="text" id="patientListSearch" onkeyup="filterPatientTable()" placeholder="Buscar paciente por Nombre o RUT (Ej: 12.345.678-9)..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        </div>
-                        <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-user-plus text-xs"></i>
-                            <span>+ Nuevo Paciente</span>
-                        </button>
-                    </div>
+          <div class="mt-5 p-4 rounded-2xl bg-teal-50 border border-teal-100 text-[11px] text-teal-900 leading-relaxed">
+            <strong>Recordatorios incluidos:</strong> el archivo ICS contiene dos alarmas VALARM: 24 horas antes y 1 hora antes.
+            Google Calendar puede recibir la plantilla del evento mediante enlace directo.
+          </div>
+        </div>
 
-                    <div id="patientsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                        <!-- Carga dinámica de tarjetas de pacientes -->
-                    </div>
-                </div>
-
-                <!-- Detalle modal de paciente / Gráfico EVA -->
-                <div id="patientChartDetail" class="hidden bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-lg space-y-4">
-                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
-                        <div>
-                            <h3 id="detailPatientName" class="font-heading font-bold text-lg text-slate-900">Nombre Paciente</h3>
-                            <p id="detailPatientRut" class="text-xs text-slate-500 font-mono">RUT: 12.345.678-9</p>
-                        </div>
-                        <button onclick="closePatientChartDetail()" class="text-slate-400 hover:text-slate-700 p-1">
-                            <i class="fa-solid fa-xmark text-lg"></i>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Evolución Escala Dolor (EVA)</h4>
-                            <div class="h-60 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                                <canvas id="evaChartCanvas"></canvas>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 class="font-bold text-xs uppercase text-slate-500 mb-2">Histórico de Atenciones</h4>
-                            <div id="patientHistoryContainer" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-                                <!-- Histórico de atenciones -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="font-heading font-bold">Agenda</h2>
+              <p class="text-xs text-slate-500">Citas registradas en Supabase.</p>
             </div>
+            <button onclick="loadAppointments()" class="text-xs font-bold text-teal-700"><i class="fa-solid fa-rotate"></i></button>
+          </div>
+          <div id="appointmentsList" class="mt-5 space-y-3"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
-            <!-- TAB 3: NUEVA ATENCIÓN KINÉSICA -->
-            <div id="tab-atencion" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-6">
-                    <div>
-                        <h3 class="font-heading font-bold text-lg text-slate-900">Registrar Atención Kinésica</h3>
-                        <p class="text-xs text-slate-500">Guarda la evolución diaria y la escala de dolor EVA del paciente</p>
-                    </div>
-
-                    <form onsubmit="saveAttention(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">RUT Paciente *</label>
-                            <input type="text" id="attPatientRut" required oninput="handleRutInput(this)" placeholder="Ej: 12.345.678-9" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Zona Anatómica / Tratada *</label>
-                            <input type="text" id="attZone" required placeholder="Ej: Hombro Izquierdo / Rodilla Derecha" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Dolor EVA Inicial (0-10) *</label>
-                                <input type="number" id="attEvaInicio" min="0" max="10" required placeholder="0-10" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">Dolor EVA Final (0-10) *</label>
-                                <input type="number" id="attEvaFin" min="0" max="10" required placeholder="0-10" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Notas de Evolución y Tratamiento Aplicado</label>
-                            <textarea id="attNotes" rows="3" placeholder="Detalle de la sesión (Terapia manual, electroterapia, ejercicios...)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
-                        </div>
-
-                        <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm shadow-lg shadow-teal-600/30 transition flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                            <span>Guardar Atención Kinésica</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- TAB 4: PAUTAS DE EJERCICIO Y WHATSAPP -->
-            <div id="tab-pautas" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-6">
-                    <div>
-                        <h3 class="font-heading font-bold text-lg text-slate-900">Enviar Pauta por WhatsApp</h3>
-                        <p class="text-xs text-slate-500">Envía la pauta de ejercicios para el hogar directamente al celular del paciente</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono del Paciente (+56...)</label>
-                            <input type="text" id="pautaPhone" placeholder="56912345678" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Rutina / Ejercicios Recomendados</label>
-                            <textarea id="pautaText" rows="6" placeholder="1. Estiramiento Isquiotibial: 3 series x 30 seg&#10;2. Puente Glúteo: 3 series x 15 reps&#10;3. Movilidad de Tobillo: 3 series x 12 reps" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
-                        </div>
-
-                        <button onclick="sendPautaWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs sm:text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
-                            <i class="fa-brands fa-whatsapp text-base"></i>
-                            <span>Enviar Pauta por WhatsApp</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 5: AGENDA & CITAS -->
-            <div id="tab-agenda" class="tab-content space-y-6 hidden">
-                <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
-                    <div class="w-16 h-16 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold">
-                        <i class="fa-regular fa-calendar-check"></i>
-                    </div>
-                    <h3 class="font-heading font-bold text-lg text-slate-900">Módulo de Agendamiento de Citas</h3>
-                    <p class="text-xs text-slate-500 max-w-md mx-auto">Próximamente agendamiento integrado con Google Calendar para control de horarios en el gabinete y visitas.</p>
-                </div>
-            </div>
-        </main>
+<!-- MODAL NUEVO PACIENTE -->
+<div id="newPatientModal" class="hidden fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <h2 class="font-heading font-bold">Nuevo paciente</h2>
+      <button onclick="closeNewPatientModal()" class="p-2 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
-    <!-- MODAL NUEVO PACIENTE -->
-    <div id="newPatientModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h3>
-                <button onclick="closeNewPatientModal()" class="text-slate-400 hover:text-slate-700">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
+    <form onsubmit="savePatient(event)" class="mt-4 space-y-3.5">
+      <div><label class="label">RUT *</label><input id="patRut" required oninput="handleRutInput(this)" class="input font-mono" placeholder="12.345.678-9"></div>
+      <div><label class="label">Nombre completo *</label><input id="patName" required class="input" placeholder="Juan Pérez"></div>
+      <div><label class="label">Teléfono</label><input id="patPhone" class="input" placeholder="+56912345678"></div>
+      <div>
+        <label class="label">Diagnóstico</label>
+        <select id="patDiagSelect" class="input"></select>
+      </div>
+      <div>
+        <label class="label">Diagnóstico manual</label>
+        <input id="patDiagManual" class="input" placeholder="Si no aparece en el catálogo">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeNewPatientModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Cancelar</button>
+        <button class="px-5 py-2.5 rounded-xl bg-teal-600 text-white text-xs font-bold">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            <form onsubmit="savePatient(event)" class="space-y-3.5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">RUT Paciente *</label>
-                    <input type="text" id="patRut" required oninput="handleRutInput(this)" placeholder="Ej: 12.345.678-9" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nombre Completo *</label>
-                    <input type="text" id="patName" required placeholder="Ej: Juan Pablo Pérez" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Teléfono Móvil</label>
-                    <input type="text" id="patPhone" placeholder="Ej: +56912345678" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Diagnóstico Kinésico Principal</label>
-                    <input type="text" id="patDiag" placeholder="Ej: Tendinopatía de Manguito Rotador" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                </div>
-
-                <div class="flex justify-end space-x-2 pt-2">
-                    <button type="button" onclick="closeNewPatientModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200">Cancelar</button>
-                    <button type="submit" class="px-5 py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 shadow-md">Guardar Paciente</button>
-                </div>
-            </form>
-        </div>
+<!-- MODAL ACCIONES DE CITA -->
+<div id="appointmentActionModal" class="hidden fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+  <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="font-heading font-bold">Cita preparada</h2>
+        <p id="appointmentActionSummary" class="text-xs text-slate-500 mt-1"></p>
+      </div>
+      <button onclick="closeAppointmentActionModal()" class="p-2 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <div class="mt-5 grid sm:grid-cols-2 gap-3">
+      <button onclick="downloadCurrentICS()" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-left">
+        <i class="fa-solid fa-file-arrow-down text-teal-700"></i>
+        <span class="block mt-2 text-xs font-bold">Descargar .ics</span>
+        <span class="block mt-1 text-[10px] text-slate-500">Incluye alarmas 24 h y 1 h.</span>
+      </button>
+      <button onclick="openCurrentGoogleCalendar()" class="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 text-left">
+        <i class="fa-brands fa-google text-blue-700"></i>
+        <span class="block mt-2 text-xs font-bold">Google Calendar</span>
+        <span class="block mt-1 text-[10px] text-slate-500">Abre una plantilla del evento.</span>
+      </button>
+      <button onclick="sendCurrentReminderWhatsApp()" class="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-left">
+        <i class="fa-brands fa-whatsapp text-emerald-700"></i>
+        <span class="block mt-2 text-xs font-bold">Recordatorio WhatsApp</span>
+        <span class="block mt-1 text-[10px] text-slate-500">Mensaje listo para enviar.</span>
+      </button>
+      <button onclick="sendCurrentReminderEmail()" class="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 text-left">
+        <i class="fa-regular fa-envelope text-slate-700"></i>
+        <span class="block mt-2 text-xs font-bold">Recordatorio por correo</span>
+        <span class="block mt-1 text-[10px] text-slate-500">Abre el cliente de correo.</span>
+      </button>
+    </div>
+    <p class="mt-4 text-[10px] text-slate-400 leading-relaxed">
+      Por limitaciones de una PWA estática, el sistema no puede enviar WhatsApp/correo automáticamente ni adjuntar un Blob .ics a un mensaje sin un servicio backend. Esta versión genera el contenido y deja el envío asistido.
+    </p>
+  </div>
+</div>
 
-    <!-- SCRIPT DE LÓGICA Y FUNCIONALIDAD COMPLETA -->
-    <script>
-        // Configuración interna de Servidor Clínico
-        const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
-        const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtocHVqaGZ6Yml4aXdwenVzdW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNjE3OTQsImV4cCI6MjA1NTczNzc5NH0.Z_8r2E17eI59Xy031Nn_6R3S7xJg9K4f_Z0Jk9P1_L8';
+<script>
+  /* ============================================================
+     CONFIGURACIÓN
+     ============================================================ */
+  const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
+  const DEFAULT_SUPABASE_ANON_KEY = 'inserte aqui su anon key';
 
-        let SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
-        let SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_ANON_KEY;
-        let supabaseClient = null;
-        let evaChartInstance = null;
-        let allPatients = [];
+  const SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
+  const SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_ANON_KEY;
 
-        window.onload = function() {
-            initSupabase();
-        };
+  let supabaseClient = null;
+  let allPatients = [];
+  let allExercises = [];
+  let allDiagnosticos = [];
+  let allAppointments = [];
+  let selectedExercises = [];
+  let evaChartInstance = null;
+  let currentAppointmentPayload = null;
 
-        function initSupabase() {
-            if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-                try {
-                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    loadPatients();
-                } catch (err) {
-                    console.error('Error al conectar con la base de datos:', err);
-                }
-            }
-        }
+  const CLINIC_NAME = 'CyJ Kinesiología';
+  const PROFESSIONAL_NAME = 'Klgo. Cristian Barrera Pinto';
+  const DEFAULT_APPOINTMENT_DURATION = 60;
+  const CLINIC_PHONE = '56912345678';
 
-        // Login Handles
-        function handleLogin(e) {
-            e.preventDefault();
-            const pin = document.getElementById('loginPinInput').value;
-            if (pin === '#20ErEj24*' || pin === '1234') {
-                document.getElementById('loginOverlay').classList.add('hidden');
-            } else {
-                alert('Clave incorrecta. Revisa tu contraseña de acceso.');
-            }
-        }
+  /* ============================================================
+     ESTILOS DE UTILIDAD
+     ============================================================ */
+  document.head.insertAdjacentHTML('beforeend', `
+    <style>
+      .label{display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:.35rem}
+      .input{width:100%;padding:.65rem .85rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem;outline:none;background:white}
+      .input:focus{border-color:#14b8a6;box-shadow:0 0 0 2px rgba(20,184,166,.15)}
+      .nav-item.active{background:#0d9488;color:white;box-shadow:0 8px 20px rgba(13,148,136,.18)}
+    </style>
+  `);
 
-        function lockSystem() {
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('loginPinInput').value = '';
-        }
+  window.addEventListener('load', async () => {
+    initSupabase();
+    setDefaultAppointmentDateTime();
+  });
 
-        // Sidebar handles
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                backdrop.classList.remove('hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                backdrop.classList.add('hidden');
-            }
-        }
+  function initSupabase() {
+    if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === 'inserte aqui su anon key') {
+      showToast('Supabase no está configurado. Revisa SUPABASE_ANON_KEY.', 'error');
+      return;
+    }
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      loadInitialData();
+    } catch (error) {
+      console.error(error);
+      showToast('No se pudo inicializar Supabase.', 'error');
+    }
+  }
 
-        function closeSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            sidebar.classList.add('-translate-x-full');
-            backdrop.classList.add('hidden');
-        }
+  async function loadInitialData() {
+    await Promise.all([
+      loadPatients(),
+      loadExercises(),
+      loadDiagnosticos(),
+      loadAppointments()
+    ]);
+    updateDashboard();
+  }
 
-        // Tabs
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.remove('bg-teal-600', 'text-white', 'shadow-lg');
-                el.classList.add('text-slate-400', 'hover:bg-slate-800');
-            });
+  /* ============================================================
+     LOGIN
+     ============================================================ */
+  function handleLogin(e) {
+    e.preventDefault();
+    const pin = document.getElementById('loginPinInput').value;
+    if (pin === '#20ErEj24*' || pin === '1234') {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      sessionStorage.setItem('kine_ui_unlocked', '1');
+    } else {
+      showToast('Clave incorrecta.', 'error');
+    }
+  }
 
-            const activeContent = document.getElementById('tab-' + tabId);
-            const activeNav = document.getElementById('nav-' + tabId);
-            
-            if (activeContent) activeContent.classList.remove('hidden');
-            if (activeNav) {
-                activeNav.classList.add('bg-teal-600', 'text-white', 'shadow-lg');
-                activeNav.classList.remove('text-slate-400', 'hover:bg-slate-800');
-            }
+  function lockSystem() {
+    sessionStorage.removeItem('kine_ui_unlocked');
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('loginPinInput').value = '';
+  }
 
-            const titles = {
-                'dashboard': 'Inicio & Métricas',
-                'pacientes': 'Pacientes & RUT',
-                'atencion': 'Nueva Atención Kinésica',
-                'pautas': 'Pautas de Ejercicio',
-                'agenda': 'Agenda & Citas'
-            };
-            document.getElementById('currentTabTitle').textContent = titles[tabId] || 'Panel Clínico';
+  if (sessionStorage.getItem('kine_ui_unlocked') === '1') {
+    document.getElementById('loginOverlay').classList.add('hidden');
+  }
 
-            if (window.innerWidth < 768) closeSidebar();
-        }
+  /* ============================================================
+     UI
+     ============================================================ */
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMessage').textContent = message;
+    document.getElementById('toastIcon').className = type === 'error'
+      ? 'fa-solid fa-circle-exclamation text-red-400 mt-0.5'
+      : 'fa-solid fa-circle-check text-teal-400 mt-0.5';
+    toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
 
-        // Modal Patient
-        function openNewPatientModal() {
-            document.getElementById('newPatientModal').classList.remove('hidden');
-            document.getElementById('newPatientModal').classList.add('flex');
-        }
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    document.getElementById('sidebarBackdrop').classList.toggle('hidden');
+  }
 
-        function closeNewPatientModal() {
-            document.getElementById('newPatientModal').classList.add('hidden');
-            document.getElementById('newPatientModal').classList.remove('flex');
-        }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarBackdrop').classList.add('hidden');
+  }
 
-        // --- FORMATEO Y VALIDACIÓN DE RUT CHILENO (MÓDULO 11) ---
-        function formatChileanRut(rutRaw) {
-            if (!rutRaw) return '';
-            let clean = rutRaw.replace(/[^0-9kK]/g, '').toUpperCase();
-            if (clean.length < 2) return clean;
-            
-            let dv = clean.slice(-1);
-            let body = clean.slice(0, -1);
-            body = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            return `${body}-${dv}`;
-        }
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
-        function validateChileanRut(rutRaw) {
-            let clean = rutRaw.replace(/[^0-9kK]/g, '').toUpperCase();
-            if (clean.length < 8 || clean.length > 9) return false;
-            
-            let dv = clean.slice(-1);
-            let body = clean.slice(0, -1);
-            let sum = 0;
-            let multiplier = 2;
-            
-            for (let i = body.length - 1; i >= 0; i--) {
-                sum += parseInt(body.charAt(i)) * multiplier;
-                multiplier = multiplier === 7 ? 2 : multiplier + 1;
-            }
-            
-            let expectedDv = 11 - (sum % 11);
-            let dvChar = expectedDv === 11 ? '0' : expectedDv === 10 ? 'K' : expectedDv.toString();
-            return dv === dvChar;
-        }
+    document.getElementById('tab-' + tabId)?.classList.remove('hidden');
+    document.getElementById('nav-' + tabId)?.classList.add('active');
 
-        function handleRutInput(inputElement) {
-            inputElement.value = formatChileanRut(inputElement.value);
-        }
+    const meta = {
+      dashboard: ['Inicio & Métricas', 'Seguimiento clínico y gestión de pacientes.'],
+      pacientes: ['Pacientes', 'Búsqueda, ficha y evolución EVA.'],
+      atencion: ['Nueva Atención Kinésica', 'Registro clínico de evolución y dolor.'],
+      pautas: ['Pautas de Ejercicio', 'Biblioteca y envío asistido de pautas.'],
+      agenda: ['Agenda & Citas', 'Citas, Google Calendar, ICS y recordatorios.']
+    };
 
-        async function savePatient(e) {
-            e.preventDefault();
-            const rawRut = document.getElementById('patRut').value.trim();
-            const rut = formatChileanRut(rawRut);
-            const nombre = document.getElementById('patName').value.trim();
-            const telefono = document.getElementById('patPhone').value.trim();
-            const diagnostico = document.getElementById('patDiag').value.trim();
+    document.getElementById('currentTabTitle').textContent = meta[tabId]?.[0] || 'Panel Clínico';
+    document.getElementById('currentTabSubtitle').textContent = meta[tabId]?.[1] || '';
+    if (window.innerWidth < 768) closeSidebar();
+  }
 
-            if (!rut || !validateChileanRut(rut)) {
-                if (!confirm(`El RUT "${rut}" no parece ser un RUT chileno válido (dígito verificador incorrecto). ¿Deseas guardarlo de todos modos?`)) {
-                    return;
-                }
-            }
+  function openNewPatientModal() {
+    populateDiagnosisSelect();
+    document.getElementById('newPatientModal').classList.remove('hidden');
+    document.getElementById('newPatientModal').classList.add('flex');
+  }
 
-            if (!supabaseClient) {
-                alert('Por favor verifica la conexión con el servidor.');
-                return;
-            }
+  function closeNewPatientModal() {
+    document.getElementById('newPatientModal').classList.add('hidden');
+    document.getElementById('newPatientModal').classList.remove('flex');
+  }
 
-            const { error } = await supabaseClient.from('pacientes').insert([{ rut, nombre, telefono, diagnostico }]);
-            if (error) {
-                alert('Error al guardar datos: ' + error.message);
-            } else {
-                alert(`Paciente ${nombre} (${rut}) guardado exitosamente.`);
-                closeNewPatientModal();
-                loadPatients();
-            }
-        }
+  function closeAppointmentActionModal() {
+    document.getElementById('appointmentActionModal').classList.add('hidden');
+    document.getElementById('appointmentActionModal').classList.remove('flex');
+  }
 
-        async function loadPatients() {
-            if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('pacientes').select('*').order('created_at', { ascending: false });
-            if (error) {
-                console.error(error);
-                return;
-            }
-            allPatients = data || [];
-            document.getElementById('statTotalPatients').textContent = allPatients.length;
-            renderPatientsGrid(allPatients);
-            
-            // Stats atenciones totales
-            const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true });
-            document.getElementById('statTodayAppts').textContent = count || 0;
+  /* ============================================================
+     RUT CHILENO
+     ============================================================ */
+  function formatChileanRut(value) {
+    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length < 2) return clean;
+    const dv = clean.slice(-1);
+    const body = clean.slice(0, -1);
+    return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+  }
 
-            // Stats atenciones del mes actual
-            const now = new Date();
-            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            const { count: monthCount } = await supabaseClient
-                .from('atenciones')
-                .select('*', { count: 'exact', head: true })
-                .gte('created_at', firstDayOfMonth);
-            
-            document.getElementById('statMonthAppts').textContent = monthCount || 0;
-        }
+  function validateChileanRut(value) {
+    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length < 2) return false;
+    const dv = clean.slice(-1);
+    const body = clean.slice(0, -1);
+    if (!/^\d+$/.test(body)) return false;
 
-        function renderPatientsGrid(list) {
-            const grid = document.getElementById('patientsGrid');
-            if (list.length === 0) {
-                grid.innerHTML = `<div class="bg-white p-6 rounded-2xl border border-slate-200 text-center text-slate-400 col-span-full">No hay pacientes registrados aún.</div>`;
-                return;
-            }
+    let sum = 0, multiplier = 2;
+    for (let i = body.length - 1; i >= 0; i--) {
+      sum += Number(body[i]) * multiplier;
+      multiplier = multiplier === 7 ? 2 : multiplier + 1;
+    }
+    const expected = 11 - (sum % 11);
+    const expectedDv = expected === 11 ? '0' : expected === 10 ? 'K' : String(expected);
+    return dv === expectedDv;
+  }
 
-            grid.innerHTML = list.map(p => `
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="font-bold text-sm text-slate-900">${p.nombre}</h4>
-                            <p class="text-xs text-slate-500 font-mono">${p.rut}</p>
-                        </div>
-                        <span class="text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full font-semibold">Activo</span>
-                    </div>
-                    <p class="text-xs text-slate-600 line-clamp-1"><i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${p.diagnostico || 'Sin diagnóstico registrado'}</p>
-                    <button onclick="viewPatientDetail('${p.rut}', '${p.nombre}')" class="w-full py-1.5 bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center justify-center space-x-1">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Ver Evolución EVA</span>
-                    </button>
-                </div>
-            `).join('');
-        }
+  function handleRutInput(el) {
+    el.value = formatChileanRut(el.value);
+  }
 
-        function filterPatientTable() {
-            const query = document.getElementById('patientListSearch').value.toLowerCase();
-            const filtered = allPatients.filter(p => p.nombre.toLowerCase().includes(query) || p.rut.toLowerCase().includes(query));
-            renderPatientsGrid(filtered);
-        }
+  /* ============================================================
+     PACIENTES
+     ============================================================ */
+  async function savePatient(e) {
+    e.preventDefault();
+    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
 
-        async function viewPatientDetail(rut, nombre) {
-            document.getElementById('patientChartDetail').classList.remove('hidden');
-            document.getElementById('detailPatientName').textContent = nombre;
-            document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
+    const rut = formatChileanRut(document.getElementById('patRut').value.trim());
+    const nombre = document.getElementById('patName').value.trim();
+    const telefono = document.getElementById('patPhone').value.trim();
+    const selectDiag = document.getElementById('patDiagSelect').value;
+    const manualDiag = document.getElementById('patDiagManual').value.trim();
+    const diagnostico = manualDiag || selectDiag || null;
 
-            if (!supabaseClient) return;
-            const { data } = await supabaseClient.from('atenciones').select('*').eq('rut_paciente', rut).order('created_at', { ascending: true });
-            
-            const historyContainer = document.getElementById('patientHistoryContainer');
-            if (!data || data.length === 0) {
-                historyContainer.innerHTML = '<p class="text-slate-400 text-xs">Sin atenciones registradas aún para este paciente.</p>';
-                renderEvaChart([], []);
-                return;
-            }
+    if (!validateChileanRut(rut)) {
+      const ok = confirm(`El RUT "${rut}" no parece válido. ¿Guardar de todos modos?`);
+      if (!ok) return;
+    }
 
-            historyContainer.innerHTML = data.map((a, i) => `
-                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
-                    <div>
-                        <span class="font-bold text-slate-800">Sesión #${a.sesion_num || (i+1)} - ${a.zona}</span>
-                        <p class="text-[11px] text-slate-500">${a.fecha || 'Hoy'} - ${a.notas || ''}</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs font-bold text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</span>
-                    </div>
-                </div>
-            `).join('');
+    const { error } = await supabaseClient.from('pacientes').insert([{
+      rut, nombre, telefono, diagnostico
+    }]);
 
-            const labels = data.map((a, i) => 'Sesión ' + (a.sesion_num || (i + 1)));
-            const evaValues = data.map(a => a.eva_fin);
-            renderEvaChart(labels, evaValues);
-        }
+    if (error) {
+      showToast('No se pudo guardar: ' + error.message, 'error');
+      return;
+    }
 
-        function renderEvaChart(labels, values) {
-            const ctx = document.getElementById('evaChartCanvas').getContext('2d');
-            if (evaChartInstance) evaChartInstance.destroy();
+    closeNewPatientModal();
+    document.getElementById('patRut').value = '';
+    document.getElementById('patName').value = '';
+    document.getElementById('patPhone').value = '';
+    document.getElementById('patDiagSelect').value = '';
+    document.getElementById('patDiagManual').value = '';
+    showToast('Paciente guardado correctamente.');
+    await loadPatients();
+    await populateAppointmentPatients();
+  }
 
-            evaChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels.length ? labels : ['Sin datos'],
-                    datasets: [{
-                        label: 'Dolor EVA Final (0-10)',
-                        data: values.length ? values : [0],
-                        borderColor: '#0d9488',
-                        backgroundColor: 'rgba(13, 148, 136, 0.15)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#0f766e'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { min: 0, max: 10, ticks: { stepSize: 1 } }
-                    }
-                }
-            });
-        }
+  async function loadPatients() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('pacientes')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-        function closePatientChartDetail() {
-            document.getElementById('patientChartDetail').classList.add('hidden');
-        }
+    if (error) {
+      console.error(error);
+      showToast('No se pudieron cargar los pacientes.', 'error');
+      return;
+    }
 
-        async function saveAttention(e) {
-            e.preventDefault();
-            const rawRut = document.getElementById('attPatientRut').value.trim();
-            const rut_paciente = formatChileanRut(rawRut);
-            const zona = document.getElementById('attZone').value.trim();
-            const eva_inicio = parseInt(document.getElementById('attEvaInicio').value);
-            const eva_fin = parseInt(document.getElementById('attEvaFin').value);
-            const notas = document.getElementById('attNotes').value.trim();
+    allPatients = data || [];
+    document.getElementById('statTotalPatients').textContent = allPatients.length;
+    renderPatientsGrid(allPatients);
+    populateAppointmentPatients();
+    updateDashboard();
+  }
 
-            if (!supabaseClient) {
-                alert('Configura primero tus llaves de conexión.');
-                return;
-            }
+  function renderPatientsGrid(list) {
+    const grid = document.getElementById('patientsGrid');
+    if (!list.length) {
+      grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">No hay pacientes que coincidan.</div>`;
+      return;
+    }
 
-            // Calcular número correlativo de sesión para el paciente
-            const { count } = await supabaseClient
-                .from('atenciones')
-                .select('*', { count: 'exact', head: true })
-                .eq('rut_paciente', rut_paciente);
+    grid.innerHTML = list.map(p => `
+      <article class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+        <div class="flex justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-sm text-slate-900">${escapeHtml(p.nombre)}</h3>
+            <p class="text-xs text-slate-500 font-mono">${escapeHtml(p.rut)}</p>
+          </div>
+          <span class="h-fit px-2 py-1 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold">Activo</span>
+        </div>
+        <p class="mt-3 text-xs text-slate-600 line-clamp-2">
+          <i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${escapeHtml(p.diagnostico || 'Sin diagnóstico')}
+        </p>
+        <div class="mt-4 grid grid-cols-2 gap-2">
+          <button onclick="viewPatientDetail(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)})" class="py-2 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 text-[11px] font-bold">
+            <i class="fa-solid fa-chart-line mr-1"></i>Evolución
+          </button>
+          <button onclick="preparePautaForPatient(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)}, ${JSON.stringify(p.telefono || '')})" class="py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold">
+            <i class="fa-brands fa-whatsapp mr-1"></i>Pauta
+          </button>
+        </div>
+      </article>
+    `).join('');
+  }
 
-            const sesion_num = (count || 0) + 1;
+  function filterPatientTable() {
+    const q = document.getElementById('patientListSearch').value.trim().toLowerCase();
+    renderPatientsGrid(allPatients.filter(p =>
+      String(p.nombre || '').toLowerCase().includes(q) ||
+      String(p.rut || '').toLowerCase().includes(q)
+    ));
+  }
 
-            const { error } = await supabaseClient.from('atenciones').insert([{ 
-                rut_paciente, 
-                zona, 
-                eva_inicio, 
-                eva_fin, 
-                notas,
-                sesion_num 
-            }]);
+  async function viewPatientDetail(rut, nombre) {
+    document.getElementById('patientChartDetail').classList.remove('hidden');
+    document.getElementById('detailPatientName').textContent = nombre;
+    document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
 
-            if (error) {
-                alert('Error al guardar atención: ' + error.message);
-            } else {
-                alert('Atención kinésica guardada correctamente (Sesión #' + sesion_num + ' para RUT ' + rut_paciente + ').');
-                document.getElementById('attPatientRut').value = '';
-                document.getElementById('attZone').value = '';
-                document.getElementById('attEvaInicio').value = '';
-                document.getElementById('attEvaFin').value = '';
-                document.getElementById('attNotes').value = '';
-                loadPatients();
-            }
-        }
+    const { data, error } = await supabaseClient
+      .from('atenciones')
+      .select('*')
+      .eq('rut_paciente', rut)
+      .order('created_at', { ascending: true });
 
-        function sendPautaWhatsApp() {
-            const phone = document.getElementById('pautaPhone').value.trim();
-            const text = document.getElementById('pautaText').value.trim();
-            if (!text) {
-                alert('Por favor escribe los ejercicios para la pauta.');
-                return;
-            }
-            const encoded = encodeURIComponent('🏥 *PAUTA DE EJERCICIOS - KLGO. CRISTIAN BARRERA*\n\n' + text);
-            window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
-        }
-    </script>
+    if (error) {
+      showToast('No se pudo cargar la evolución.', 'error');
+      return;
+    }
+
+    const history = document.getElementById('patientHistoryContainer');
+    if (!data?.length) {
+      history.innerHTML = '<p class="text-xs text-slate-400">Sin atenciones registradas.</p>';
+      renderEvaChart([], []);
+      return;
+    }
+
+    history.innerHTML = data.map((a, i) => `
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold text-slate-800">Sesión #${a.sesion_num || i + 1} · ${escapeHtml(a.zona || '')}</p>
+            <p class="text-[10px] text-slate-500 mt-1">${formatDateTime(a.created_at)}</p>
+          </div>
+          <strong class="text-xs text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</strong>
+        </div>
+        ${a.notas ? `<p class="mt-2 text-[11px] text-slate-600">${escapeHtml(a.notas)}</p>` : ''}
+      </div>
+    `).join('');
+
+    renderEvaChart(
+      data.map((a, i) => 'Sesión ' + (a.sesion_num || i + 1)),
+      data.map(a => Number(a.eva_fin))
+    );
+  }
+
+  function closePatientChartDetail() {
+    document.getElementById('patientChartDetail').classList.add('hidden');
+  }
+
+  function renderEvaChart(labels, values) {
+    const ctx = document.getElementById('evaChartCanvas').getContext('2d');
+    if (evaChartInstance) evaChartInstance.destroy();
+
+    evaChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels.length ? labels : ['Sin datos'],
+        datasets: [{
+          label: 'EVA final',
+          data: values.length ? values : [0],
+          borderColor: '#0d9488',
+          backgroundColor: 'rgba(13,148,136,.12)',
+          fill: true,
+          tension: .3,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { min: 0, max: 10, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  async function saveAttention(e) {
+    e.preventDefault();
+    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
+
+    const rut = formatChileanRut(document.getElementById('attPatientRut').value.trim());
+    const zona = document.getElementById('attZone').value.trim();
+    const eva_inicio = Number(document.getElementById('attEvaInicio').value);
+    const eva_fin = Number(document.getElementById('attEvaFin').value);
+    const notas = document.getElementById('attNotes').value.trim();
+
+    if (!validateChileanRut(rut)) {
+      const ok = confirm('El RUT no parece válido. ¿Continuar?');
+      if (!ok) return;
+    }
+
+    const patient = allPatients.find(p => p.rut === rut);
+    if (!patient) {
+      showToast('El RUT no corresponde a un paciente registrado.', 'error');
+      return;
+    }
+
+    const { count, error: countError } = await supabaseClient
+      .from('atenciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('rut_paciente', rut);
+
+    if (countError) {
+      showToast('No se pudo calcular el número de sesión.', 'error');
+      return;
+    }
+
+    const sesion_num = (count || 0) + 1;
+    const { error } = await supabaseClient.from('atenciones').insert([{
+      rut_paciente: rut, zona, eva_inicio, eva_fin, notas, sesion_num
+    }]);
+
+    if (error) {
+      showToast('Error al guardar atención: ' + error.message, 'error');
+      return;
+    }
+
+    e.target.reset();
+    showToast('Atención guardada · Sesión #' + sesion_num);
+    await loadPatients();
+  }
+
+  /* ============================================================
+     DIAGNÓSTICOS
+     ============================================================ */
+  async function loadDiagnosticos() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('diagnosticos')
+      .select('id,nombre,codigo_cie10,descripcion')
+      .eq('activo', true)
+      .order('nombre');
+
+    if (error) {
+      console.warn('diagnosticos:', error.message);
+      allDiagnosticos = [];
+      populateDiagnosisSelect();
+      return;
+    }
+
+    allDiagnosticos = data || [];
+    populateDiagnosisSelect();
+  }
+
+  function populateDiagnosisSelect() {
+    const select = document.getElementById('patDiagSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">Seleccionar diagnóstico...</option>' +
+      allDiagnosticos.map(d =>
+        `<option value="${escapeAttr(d.nombre)}">${escapeHtml(d.nombre)}${d.codigo_cie10 ? ' · ' + escapeHtml(d.codigo_cie10) : ''}</option>`
+      ).join('');
+  }
+
+  /* ============================================================
+     EJERCICIOS / PAUTAS
+     ============================================================ */
+  async function loadExercises() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('ejercicios')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre');
+
+    if (error) {
+      console.warn('ejercicios:', error.message);
+      document.getElementById('exerciseLibrary').innerHTML =
+        '<p class="text-xs text-slate-400">No fue posible cargar la biblioteca. Verifica la tabla y sus políticas RLS.</p>';
+      return;
+    }
+
+    allExercises = data || [];
+    renderExerciseLibrary(allExercises);
+  }
+
+  function renderExerciseLibrary(list) {
+    const box = document.getElementById('exerciseLibrary');
+    if (!list.length) {
+      box.innerHTML = '<p class="text-xs text-slate-400">No hay ejercicios activos en el catálogo.</p>';
+      return;
+    }
+
+    box.innerHTML = list.map(ex => `
+      <div class="border border-slate-200 rounded-2xl p-3">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 shrink-0 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+            <i class="fa-solid fa-dumbbell text-sm"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-bold text-xs text-slate-900">${escapeHtml(ex.nombre)}</h3>
+            <p class="text-[10px] text-slate-500 mt-0.5">${escapeHtml(ex.zona || 'Sin zona')}</p>
+            <p class="text-[10px] text-slate-600 mt-2">
+              ${ex.series || '-'} series · ${ex.repeticiones ? ex.repeticiones + ' rep.' : ex.tiempo_sostener_segundos ? ex.tiempo_sostener_segundos + ' seg.' : 'según indicación'}
+            </p>
+          </div>
+          <button onclick="addExerciseToRoutine(${JSON.stringify(ex.id)})" class="shrink-0 px-3 py-2 rounded-xl bg-teal-600 text-white text-[10px] font-bold">Añadir</button>
+        </div>
+        ${ex.url_video || ex.url_recurso ? `
+          <div class="mt-2 flex gap-2">
+            ${ex.url_video ? `<a target="_blank" rel="noopener" href="${escapeAttr(ex.url_video)}" class="text-[10px] text-blue-700 font-bold"><i class="fa-solid fa-video mr-1"></i>Video</a>` : ''}
+            ${ex.url_recurso ? `<a target="_blank" rel="noopener" href="${escapeAttr(ex.url_recurso)}" class="text-[10px] text-slate-700 font-bold"><i class="fa-solid fa-file mr-1"></i>Recurso</a>` : ''}
+          </div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function filterExercises() {
+    const q = document.getElementById('exerciseSearch').value.trim().toLowerCase();
+    renderExerciseLibrary(allExercises.filter(ex =>
+      String(ex.nombre || '').toLowerCase().includes(q) ||
+      String(ex.zona || '').toLowerCase().includes(q)
+    ));
+  }
+
+  function addExerciseToRoutine(id) {
+    const ex = allExercises.find(x => x.id === id);
+    if (!ex) return;
+    selectedExercises.push(ex);
+    renderSelectedExercises();
+  }
+
+  function removeExerciseFromRoutine(index) {
+    selectedExercises.splice(index, 1);
+    renderSelectedExercises();
+  }
+
+  function renderSelectedExercises() {
+    const box = document.getElementById('selectedExercises');
+    if (!selectedExercises.length) {
+      box.innerHTML = '<div class="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-400">Añade ejercicios desde la biblioteca.</div>';
+      return;
+    }
+
+    box.innerHTML = selectedExercises.map((ex, i) => `
+      <div class="flex items-start gap-3 p-3 rounded-2xl bg-teal-50 border border-teal-100">
+        <span class="w-6 h-6 rounded-lg bg-white text-teal-700 text-[10px] font-bold flex items-center justify-center">${i + 1}</span>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-slate-900">${escapeHtml(ex.nombre)}</p>
+          <p class="text-[10px] text-slate-600">
+            ${ex.series || '-'} series · ${ex.repeticiones ? ex.repeticiones + ' repeticiones' : ex.tiempo_sostener_segundos ? ex.tiempo_sostener_segundos + ' segundos' : 'según indicación'}
+          </p>
+        </div>
+        <button onclick="removeExerciseFromRoutine(${i})" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>
+      </div>
+    `).join('');
+  }
+
+  function preparePautaForPatient(rut, nombre, telefono) {
+    switchTab('pautas');
+    document.getElementById('pautaPatientName').value = nombre || '';
+    document.getElementById('pautaPhone').value = normalizePhone(telefono || '');
+    showToast('Paciente cargado en la pauta.');
+  }
+
+  function buildRoutineText() {
+    const name = document.getElementById('pautaPatientName').value.trim();
+    const extra = document.getElementById('pautaExtra').value.trim();
+
+    let text = `🏥 ${CLINIC_NAME}\n`;
+    text += `👨‍⚕️ ${PROFESSIONAL_NAME}\n\n`;
+    text += name ? `Hola ${name}, te comparto tu pauta de ejercicios:\n\n` : 'Te comparto tu pauta de ejercicios:\n\n';
+
+    if (selectedExercises.length) {
+      selectedExercises.forEach((ex, i) => {
+        text += `${i + 1}. ${ex.nombre}\n`;
+        text += `   • ${ex.series || '-'} series`;
+        if (ex.repeticiones) text += ` × ${ex.repeticiones} repeticiones`;
+        if (ex.tiempo_sostener_segundos) text += ` · ${ex.tiempo_sostener_segundos} segundos`;
+        text += '\n';
+        if (ex.instrucciones) text += `   • ${ex.instrucciones}\n`;
+        if (ex.url_video) text += `   • Video: ${ex.url_video}\n`;
+        if (ex.url_recurso) text += `   • Recurso: ${ex.url_recurso}\n`;
+        text += '\n';
+      });
+    } else {
+      text += 'Por favor revisa las indicaciones entregadas durante la atención.\n\n';
+    }
+
+    if (extra) text += `📌 Indicaciones:\n${extra}\n\n`;
+    text += 'Si aparece dolor intenso, síntomas nuevos o una reacción inesperada, suspende el ejercicio y comunícate con tu profesional.';
+    return text;
+  }
+
+  function copyRoutineText() {
+    const text = buildRoutineText();
+    navigator.clipboard?.writeText(text)
+      .then(() => showToast('Pauta copiada al portapapeles.'))
+      .catch(() => showToast('No se pudo copiar automáticamente.', 'error'));
+  }
+
+  function sendPautaWhatsApp() {
+    const phone = normalizePhone(document.getElementById('pautaPhone').value);
+    if (!phone) return showToast('Ingresa un teléfono para WhatsApp.', 'error');
+    const text = encodeURIComponent(buildRoutineText());
+    window.open(`https://wa.me/${phone}?text=${text}`, '_blank', 'noopener');
+  }
+
+  /* ============================================================
+     CITAS
+     ============================================================ */
+  function setDefaultAppointmentDateTime() {
+    const now = new Date();
+    const date = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    document.getElementById('apptDate').value = date;
+    document.getElementById('apptTime').value = '09:00';
+  }
+
+  function populateAppointmentPatients() {
+    const select = document.getElementById('apptPatientRut');
+    if (!select) return;
+    select.innerHTML = '<option value="">Seleccionar paciente...</option>' +
+      allPatients.map(p => `<option value="${escapeAttr(p.rut)}">${escapeHtml(p.nombre)} · ${escapeHtml(p.rut)}</option>`).join('');
+  }
+
+  async function saveAppointment(e) {
+    e.preventDefault();
+    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
+
+    const rut = document.getElementById('apptPatientRut').value;
+    const patient = allPatients.find(p => p.rut === rut);
+    if (!patient) return showToast('Selecciona un paciente.', 'error');
+
+    const fecha = document.getElementById('apptDate').value;
+    const hora = document.getElementById('apptTime').value;
+    const duracion = Number(document.getElementById('apptDuration').value || DEFAULT_APPOINTMENT_DURATION);
+    const reason = document.getElementById('apptReason').value.trim();
+
+    // La tabla existente "citas" del proyecto solo requiere:
+    // id, rut_paciente, fecha, hora, estado, created_at.
+    const payload = {
+      rut_paciente: rut,
+      fecha,
+      hora,
+      estado: 'agendada'
+    };
+
+    const { data, error } = await supabaseClient.from('citas').insert([payload]).select().single();
+    if (error) {
+      showToast('No se pudo guardar la cita: ' + error.message, 'error');
+      return;
+    }
+
+    currentAppointmentPayload = {
+      id: data?.id || null,
+      rut,
+      patientName: patient.nombre,
+      phone: normalizePhone(patient.telefono || ''),
+      email: patient.email || '',
+      date: fecha,
+      time: hora,
+      duration: duracion,
+      reason
+    };
+
+    document.getElementById('appointmentActionSummary').textContent =
+      `${patient.nombre} · ${formatLocalAppointment(fecha, hora)} · ${duracion} min`;
+
+    document.getElementById('appointmentActionModal').classList.remove('hidden');
+    document.getElementById('appointmentActionModal').classList.add('flex');
+
+    e.target.reset();
+    setDefaultAppointmentDateTime();
+    await loadAppointments();
+    updateDashboard();
+  }
+
+  async function loadAppointments() {
+    if (!supabaseClient) return;
+
+    const { data, error } = await supabaseClient
+      .from('citas')
+      .select('*')
+      .order('fecha', { ascending: true })
+      .order('hora', { ascending: true });
+
+    if (error) {
+      console.warn('citas:', error.message);
+      document.getElementById('appointmentsList').innerHTML =
+        '<p class="text-xs text-slate-400">No fue posible cargar la agenda. Revisa RLS y la estructura de la tabla citas.</p>';
+      return;
+    }
+
+    allAppointments = data || [];
+    renderAppointments();
+    updateDashboard();
+  }
+
+  function renderAppointments() {
+    const list = document.getElementById('appointmentsList');
+    const now = new Date();
+
+    const enriched = allAppointments
+      .map(a => ({ ...a, patient: allPatients.find(p => p.rut === a.rut_paciente) }))
+      .filter(a => {
+        const d = appointmentDate(a.fecha, a.hora);
+        return d >= now || a.estado === 'agendada';
+      })
+      .slice(0, 50);
+
+    if (!enriched.length) {
+      list.innerHTML = '<p class="text-xs text-slate-400">No hay citas próximas registradas.</p>';
+      return;
+    }
+
+    list.innerHTML = enriched.map(a => {
+      const patient = a.patient;
+      const summary = patient ? patient.nombre : a.rut_paciente;
+      const d = appointmentDate(a.fecha, a.hora);
+      const google = buildGoogleCalendarUrl({
+        patientName: summary,
+        date: a.fecha,
+        time: a.hora,
+        duration: DEFAULT_APPOINTMENT_DURATION,
+        reason: ''
+      });
+
+      return `
+        <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs font-bold text-slate-900">${escapeHtml(summary)}</p>
+              <p class="mt-1 text-[11px] text-slate-600">${formatLocalAppointment(a.fecha, a.hora)}</p>
+              <p class="mt-1 text-[10px] text-slate-400">${escapeHtml(a.estado || 'agendada')}</p>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-1 rounded-full bg-teal-100 text-teal-700">
+              ${daysUntil(d)} días
+            </span>
+          </div>
+          <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button onclick='openAppointmentActions(${JSON.stringify({
+              id: a.id,
+              rut: a.rut_paciente,
+              patientName: summary,
+              phone: normalizePhone(patient?.telefono || ''),
+              email: patient?.email || '',
+              date: a.fecha,
+              time: a.hora,
+              duration: DEFAULT_APPOINTMENT_DURATION,
+              reason: ''
+            })})' class="py-2 rounded-xl bg-teal-600 text-white text-[10px] font-bold">Acciones</button>
+            <a href="${escapeAttr(google)}" target="_blank" rel="noopener" class="py-2 rounded-xl bg-blue-50 text-blue-700 text-center text-[10px] font-bold">Google</a>
+            <button onclick='downloadICSForAppointment(${JSON.stringify({
+              patientName: summary,
+              date: a.fecha,
+              time: a.hora,
+              duration: DEFAULT_APPOINTMENT_DURATION,
+              reason: ''
+            })})' class="py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-[10px] font-bold">ICS</button>
+            <button onclick='sendAppointmentReminderWhatsApp(${JSON.stringify({
+              patientName: summary,
+              phone: normalizePhone(patient?.telefono || ''),
+              date: a.fecha,
+              time: a.hora,
+              duration: DEFAULT_APPOINTMENT_DURATION,
+              reason: ''
+            })})' class="py-2 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-bold">WhatsApp</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openAppointmentActions(payload) {
+    currentAppointmentPayload = payload;
+    document.getElementById('appointmentActionSummary').textContent =
+      `${payload.patientName} · ${formatLocalAppointment(payload.date, payload.time)}`;
+    document.getElementById('appointmentActionModal').classList.remove('hidden');
+    document.getElementById('appointmentActionModal').classList.add('flex');
+  }
+
+  function buildCalendarEvent(payload) {
+    const start = localDateTime(payload.date, payload.time);
+    const end = new Date(start.getTime() + (payload.duration || 60) * 60000);
+    return { start, end };
+  }
+
+  function buildGoogleCalendarUrl(payload) {
+    const { start, end } = buildCalendarEvent(payload);
+    const startUTC = toGoogleUtc(start);
+    const endUTC = toGoogleUtc(end);
+
+    const title = `${CLINIC_NAME} · Atención kinésica`;
+    const details =
+      `Paciente: ${payload.patientName}\\n` +
+      `Profesional: ${PROFESSIONAL_NAME}\\n` +
+      (payload.reason ? `Motivo: ${payload.reason}\\n` : '') +
+      `Recordatorios sugeridos: 24 horas antes y 1 hora antes.`;
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: title,
+      dates: `${startUTC}/${endUTC}`,
+      details,
+      location: CLINIC_NAME
+    });
+
+    return 'https://calendar.google.com/calendar/render?' + params.toString();
+  }
+
+  function toGoogleUtc(date) {
+    const iso = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    return iso.slice(0, 15) + 'Z';
+  }
+
+  function generateICS(payload) {
+    const { start, end } = buildCalendarEvent(payload);
+    const uid = (payload.id || crypto.randomUUID?.() || Date.now()) + '@cyj-kinesiologia';
+    const dtstamp = formatICSDate(new Date());
+    const dtstart = formatICSDate(start);
+    const dtend = formatICSDate(end);
+
+    const summary = escapeICS(`${CLINIC_NAME} · Atención kinésica`);
+    const description = escapeICS(
+      `Paciente: ${payload.patientName}\n` +
+      `Profesional: ${PROFESSIONAL_NAME}\n` +
+      (payload.reason ? `Motivo: ${payload.reason}\n` : '') +
+      `Recordatorios: 24 horas y 1 hora antes.`
+    );
+
+    return [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//CyJ Kinesiologia//Agenda Clinica//ES',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTAMP:${dtstamp}`,
+      `DTSTART:${dtstart}`,
+      `DTEND:${dtend}`,
+      `SUMMARY:${summary}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${escapeICS(CLINIC_NAME)}`,
+      'BEGIN:VALARM',
+      'TRIGGER:-P1D',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Recordatorio: atención kinésica en 24 horas',
+      'END:VALARM',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT1H',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Recordatorio: atención kinésica en 1 hora',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+  }
+
+  function downloadICSForAppointment(payload) {
+    const ics = generateICS(payload);
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cita-${slugify(payload.patientName)}-${payload.date}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function downloadCurrentICS() {
+    if (!currentAppointmentPayload) return;
+    downloadICSForAppointment(currentAppointmentPayload);
+  }
+
+  function openCurrentGoogleCalendar() {
+    if (!currentAppointmentPayload) return;
+    window.open(buildGoogleCalendarUrl(currentAppointmentPayload), '_blank', 'noopener');
+  }
+
+  function reminderText(payload) {
+    const calendarUrl = buildGoogleCalendarUrl(payload);
+    return (
+      `Hola ${payload.patientName || ''}, te recordamos tu atención kinésica en ${CLINIC_NAME}.\n\n` +
+      `📅 Fecha: ${formatLocalAppointment(payload.date, payload.time)}\n` +
+      `👨‍⚕️ Profesional: ${PROFESSIONAL_NAME}\n\n` +
+      `Puedes guardar la cita en tu agenda desde este enlace:\n${calendarUrl}\n\n` +
+      `El archivo .ics incluye recordatorios de 24 horas y 1 hora antes.`
+    );
+  }
+
+  function sendAppointmentReminderWhatsApp(payload) {
+    const phone = normalizePhone(payload.phone);
+    if (!phone) {
+      showToast('El paciente no tiene teléfono disponible.', 'error');
+      return;
+    }
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(reminderText(payload))}`;
+    window.open(url, '_blank', 'noopener');
+  }
+
+  function sendCurrentReminderWhatsApp() {
+    if (!currentAppointmentPayload) return;
+    sendAppointmentReminderWhatsApp(currentAppointmentPayload);
+  }
+
+  function sendCurrentReminderEmail() {
+    if (!currentAppointmentPayload) return;
+    const p = currentAppointmentPayload;
+    const subject = `Recordatorio de atención kinésica · ${p.date}`;
+    const body = reminderText(p);
+    const mailto = `mailto:${encodeURIComponent(p.email || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+  }
+
+  /* ============================================================
+     DASHBOARD
+     ============================================================ */
+  async function updateDashboard() {
+    if (!supabaseClient) return;
+
+    const { count: totalAttentions } = await supabaseClient
+      .from('atenciones')
+      .select('*', { count: 'exact', head: true });
+
+    const now = new Date();
+    const first = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { count: monthAttentions } = await supabaseClient
+      .from('atenciones')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', first);
+
+    const upcoming = allAppointments.filter(a => appointmentDate(a.fecha, a.hora) >= now && a.estado !== 'cancelada');
+
+    document.getElementById('statTotalAttentions').textContent = totalAttentions || 0;
+    document.getElementById('statMonthAttentions').textContent = monthAttentions || 0;
+    document.getElementById('statUpcomingAppointments').textContent = upcoming.length;
+
+    const box = document.getElementById('dashboardUpcoming');
+    if (!upcoming.length) {
+      box.innerHTML = '<p class="text-xs text-slate-400">No hay citas próximas.</p>';
+      return;
+    }
+
+    box.innerHTML = upcoming.slice(0, 5).map(a => {
+      const patient = allPatients.find(p => p.rut === a.rut_paciente);
+      return `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <p class="text-xs font-bold">${escapeHtml(patient?.nombre || a.rut_paciente)}</p>
+          <p class="text-[10px] text-slate-500 mt-1">${formatLocalAppointment(a.fecha, a.hora)}</p>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function normalizePhone(value) {
+    let p = String(value || '').replace(/[^\d]/g, '');
+    if (!p) return '';
+    if (p.startsWith('56')) return p;
+    if (p.startsWith('9') && p.length === 9) return '56' + p;
+    if (p.startsWith('09')) return '56' + p.slice(1);
+    return p;
+  }
+
+  function localDateTime(dateStr, timeStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const [hh, mm] = timeStr.split(':').map(Number);
+    return new Date(y, m - 1, d, hh, mm, 0, 0);
+  }
+
+  function appointmentDate(dateStr, timeStr) {
+    return localDateTime(dateStr, timeStr || '00:00');
+  }
+
+  function formatLocalAppointment(dateStr, timeStr) {
+    const d = appointmentDate(dateStr, timeStr);
+    return new Intl.DateTimeFormat('es-CL', {
+      weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(d);
+  }
+
+  function formatDateTime(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    return new Intl.DateTimeFormat('es-CL', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(d);
+  }
+
+  function formatICSDate(date) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  }
+
+  function escapeICS(value) {
+    return String(value || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/\r?\n/g, '\\n')
+      .replace(/,/g, '\\,')
+      .replace(/;/g, '\\;');
+  }
+
+  function slugify(value) {
+    return String(value || 'cita')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function daysUntil(date) {
+    return Math.max(0, Math.ceil((date.getTime() - Date.now()) / 86400000));
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value);
+  }
+
+  function preparePatientForAttention(rut) {
+    switchTab('atencion');
+    document.getElementById('attPatientRut').value = rut;
+  }
+</script>
 </body>
 </html>
