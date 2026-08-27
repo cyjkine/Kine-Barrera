@@ -46,9 +46,10 @@
 
 <body class="h-full bg-slate-100 text-slate-800 font-sans antialiased overflow-hidden">
 
+<!-- LOGIN / BLOQUEO DE UI CON SUPABASE AUTH -->
 <div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-  <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl border border-slate-100">
-    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-teal-500/30">
+  <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg">
       <i class="fa-solid fa-user-doctor"></i>
     </div>
     <h1 class="mt-5 text-center font-heading font-bold text-xl text-slate-900">Panel Clínico</h1>
@@ -56,16 +57,16 @@
 
     <form onsubmit="handleLogin(event)" class="mt-6 space-y-4">
       <div>
-        <label class="label">Correo Electrónico Autorizado</label>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Correo Electrónico Autorizado</label>
         <input id="loginEmailInput" type="email" autocomplete="username" required value="cristian@cyj.cl"
-          class="input font-medium text-slate-900">
+          class="w-full px-4 py-3 rounded-xl border border-slate-300 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
       </div>
       <div>
-        <label class="label">Contraseña de Acceso</label>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Contraseña de Acceso</label>
         <input id="loginPinInput" type="password" autocomplete="current-password" required placeholder="••••••••"
-          class="input text-center tracking-widest font-bold text-slate-900">
+          class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
       </div>
-      <button id="loginSubmitBtn" type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/30 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+      <button id="loginSubmitBtn" type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
         <i class="fa-solid fa-right-to-bracket"></i>
         <span>Iniciar Sesión en Servidor</span>
       </button>
@@ -76,8 +77,7 @@
   </div>
 </div>
 
-<!-- TOAST NOTIFICACIONES -->
-<div id="toast" class="toast fixed bottom-5 right-5 z-[120] max-w-sm bg-slate-900 text-white rounded-2xl px-4 py-3 shadow-2xl text-xs">
+<!-- TOAST -->
   <div class="flex items-start gap-3">
     <i id="toastIcon" class="fa-solid fa-circle-check text-teal-400 mt-0.5"></i>
     <p id="toastMessage"></p>
@@ -127,21 +127,15 @@
 
     <div class="p-4 border-t border-slate-800 bg-slate-900/60">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-full bg-teal-900/80 text-teal-300 font-bold text-xs flex items-center justify-center border border-teal-700">
-            KC
-          </div>
-          <div class="min-w-0">
-            <p id="currentUserLabel" class="text-xs font-bold text-white truncate">Kinesiologo Cristian</p>
-            <p class="text-[10px] text-slate-400 truncate">Sesión Autenticada</p>
-          </div>
+        <div>
+          <p id="currentUserLabel" class="text-xs font-bold text-white truncate">Kinesiologo Cristian</p>
+          <p class="text-[10px] text-slate-400">Sesión Autenticada</p>
         </div>
-        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-red-400 transition" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket text-xs"></i></button>
+        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-white" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </div>
   </aside>
 
-  <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 min-w-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200">
       <div>
@@ -261,14 +255,15 @@
       </div>
     </section>
 
+    <!-- ATENCION -->
     <section id="tab-atencion" class="tab-content hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+      <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm">
         <div>
-          <h2 class="font-heading font-bold text-lg text-slate-900">Registrar Atención Kinésica</h2>
-          <p class="text-xs text-slate-500">Selecciona el paciente, registra la zona tratada y la escala de dolor EVA.</p>
+          <h2 class="font-heading font-bold text-lg">Registrar atención kinésica</h2>
+          <p class="text-xs text-slate-500 mt-1">Selecciona el paciente, registra la zona tratada y la escala de dolor EVA.</p>
         </div>
 
-        <form onsubmit="saveAttention(event)" class="space-y-5">
+        <form onsubmit="saveAttention(event)" class="mt-6 space-y-4">
           <!-- BÚSQUEDA / SELECCIÓN DE PACIENTE -->
           <div>
             <label class="label">Seleccionar Paciente (RUT o Nombre) *</label>
@@ -326,13 +321,12 @@
           </div>
 
           <div>
-            <label class="label">Notas de Evolución y Tratamiento Aplicado</label>
+            <label class="label">Notas de evolución y tratamiento aplicado</label>
             <textarea id="attNotes" rows="4" class="input" placeholder="Terapia manual, electroterapia, ejercicios, tolerancia del paciente..."></textarea>
           </div>
 
-          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-teal-600/30 transition flex items-center justify-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>Guardar Atención Kinésica</span>
+          <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm">
+            <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar atención
           </button>
         </form>
       </div>
@@ -442,14 +436,17 @@
     </div>
 
     <form onsubmit="savePatient(event)" class="space-y-3.5">
-      <div>
-        <label class="label">RUT Paciente *</label>
-        <input id="patRut" required oninput="handleRutInput(this)" class="input font-mono" placeholder="Ej: 12.345.678-9">
-      </div>
-      <div>
-        <label class="label">Nombre Completo *</label>
-        <input id="patName" required class="input" placeholder="Ej: Juan Pablo Pérez">
-      </div>
+<!-- MODAL NUEVO PACIENTE -->
+<div id="newPatientModal" class="hidden fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
+  <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <h2 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h2>
+      <button onclick="closeNewPatientModal()" class="p-2 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form onsubmit="savePatient(event)" class="space-y-3.5">
+      <div><label class="label">RUT Paciente *</label><input id="patRut" required oninput="handleRutInput(this)" class="input font-mono" placeholder="Ej: 12.345.678-9"></div>
+      <div><label class="label">Nombre Completo *</label><input id="patName" required class="input" placeholder="Ej: Juan Pablo Pérez"></div>
       
       <!-- FECHA NACIMIENTO Y EDAD AUTOMÁTICA -->
       <div class="grid grid-cols-2 gap-3">
@@ -463,10 +460,7 @@
         </div>
       </div>
 
-      <div>
-        <label class="label">Teléfono Móvil</label>
-        <input id="patPhone" class="input font-mono" placeholder="+56912345678">
-      </div>
+      <div><label class="label">Teléfono Móvil</label><input id="patPhone" class="input font-mono" placeholder="+56912345678"></div>
 
       <!-- SELECCIÓN Y EDICIÓN DE DIAGNÓSTICO -->
       <div>
@@ -532,8 +526,11 @@
 </div>
 
 <script>
+  /* ============================================================
+     CONFIGURACIÓN & ESTILOS
+     ============================================================ */
   const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
-  const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtocHVqaGZ6Yml4aXdwenVzdW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNjE3OTQsImV4cCI6MjA1NTczNzc5NH0.Z_8r2E17eI59Xy031Nn_6R3S7xJg9K4f_Z0Jk9P1_L8';
+  const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_g2DuQccYKSMXvMib32wSfQ_JvniBp8U';
 
   const SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
   const SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_ANON_KEY;
@@ -548,7 +545,21 @@
   let currentAppointmentPayload = null;
 
   const CLINIC_NAME = 'CyJ Kinesiología';
-  const PROFESSIONAL_NAME = 'Kinesiologo Cristian';
+  const PROFESSIONAL_NAME = 'Klgo. Cristian Barrera Pinto';
+  const DEFAULT_APPOINTMENT_DURATION = 60;
+  const CLINIC_PHONE = '56912345678';
+
+  document.head.insertAdjacentHTML('beforeend', `
+    <style>
+      .label{display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:.35rem}
+      .input{width:100%;padding:.65rem .85rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem;outline:none;background:white}
+      .input:focus{border-color:#14b8a6;box-shadow:0 0 0 2px rgba(20,184,166,.15)}
+      .nav-item.active{background:#0d9488;color:white;box-shadow:0 8px 20px rgba(13,148,136,.18)}
+      .eva-btn{width:100%;aspect-ratio:1;border-radius:.5rem;font-weight:700;font-size:.875rem;border:1px solid #cbd5e1;background:#f8fafc;transition:all .15s}
+      .eva-btn:hover{border-color:#0d9488;background:#f0fdfa}
+      .eva-btn.selected{background:#0d9488;color:white;border-color:#0f766e;box-shadow:0 4px 10px rgba(13,148,136,.3)}
+    </style>
+  `);
 
   window.addEventListener('load', async () => {
     initSupabase();
@@ -557,12 +568,16 @@
   });
 
   function initSupabase() {
-    if (!window.supabase) return;
+    if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      showToast('Supabase no está configurado correctamente.', 'error');
+      return;
+    }
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       checkAuthSession();
     } catch (error) {
-      console.error('Error inicializando Supabase:', error);
+      console.error(error);
+      showToast('No se pudo inicializar Supabase.', 'error');
     }
   }
 
@@ -627,22 +642,13 @@
     showToast('Sesión cerrada.');
   }
 
-  async function loadInitialData() {
-    await Promise.all([
-      loadPatients(),
-      loadExercises(),
-      loadDiagnosticos(),
-      loadAppointments()
-    ]);
-    updateDashboard();
-  }
-
   /* ============================================================
      BOTONERA EVA INTERACTIVA (0-10)
      ============================================================ */
   function initEvaBtnGroups() {
     const inicioContainer = document.getElementById('evaInicioBtnGroup');
     const finContainer = document.getElementById('evaFinBtnGroup');
+    if (!inicioContainer || !finContainer) return;
     inicioContainer.innerHTML = '';
     finContainer.innerHTML = '';
 
@@ -654,7 +660,7 @@
 
   function selectEva(type, val) {
     document.querySelectorAll(`[id^="eva-${type}-"]`).forEach(btn => btn.classList.remove('selected'));
-    document.getElementById(`eva-${type}-${val}`).classList.add('selected');
+    document.getElementById(`eva-${type}-${val}`)?.classList.add('selected');
     if (type === 'inicio') {
       document.getElementById('attEvaInicio').value = val;
       document.getElementById('evaInicioVal').textContent = `EVA: ${val}`;
@@ -665,76 +671,8 @@
   }
 
   /* ============================================================
-     UI & NAVEGACIÓN
+     FECHA DE NACIMIENTO Y DIAGNÓSTICOS
      ============================================================ */
-  function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    document.getElementById('toastMessage').textContent = message;
-    document.getElementById('toastIcon').className = type === 'error'
-      ? 'fa-solid fa-circle-exclamation text-red-400 mt-0.5'
-      : 'fa-solid fa-circle-check text-teal-400 mt-0.5';
-    toast.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
-  }
-
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('-translate-x-full');
-    document.getElementById('sidebarBackdrop').classList.toggle('hidden');
-  }
-
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.add('-translate-x-full');
-    document.getElementById('sidebarBackdrop').classList.add('hidden');
-  }
-
-  function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-    document.getElementById('tab-' + tabId)?.classList.remove('hidden');
-    document.getElementById('nav-' + tabId)?.classList.add('active');
-
-    const meta = {
-      dashboard: ['Inicio & Métricas', 'Resumen clínico y estadísticas del mes.'],
-      pacientes: ['Pacientes & RUT', 'Gestión de fichas, fechas de nacimiento y evolución EVA.'],
-      atencion: ['Nueva Atención Kinésica', 'Registro de evolución, zona tratada y dolor EVA.'],
-      pautas: ['Pautas de Ejercicio', 'Biblioteca de ejercicios y pautas para el hogar.'],
-      agenda: ['Agenda & Citas', 'Agendamiento de citas y recordatorios de calendario.']
-    };
-
-    document.getElementById('currentTabTitle').textContent = meta[tabId]?.[0] || 'Panel Clínico';
-    document.getElementById('currentTabSubtitle').textContent = meta[tabId]?.[1] || '';
-    if (window.innerWidth < 768) closeSidebar();
-  }
-
-  function formatChileanRut(value) {
-    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    if (clean.length < 2) return clean;
-    const dv = clean.slice(-1);
-    const body = clean.slice(0, -1);
-    return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
-  }
-
-  function validateChileanRut(value) {
-    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    if (clean.length < 8) return false;
-    const dv = clean.slice(-1);
-    const body = clean.slice(0, -1);
-    let sum = 0, multiplier = 2;
-    for (let i = body.length - 1; i >= 0; i--) {
-      sum += Number(body[i]) * multiplier;
-      multiplier = multiplier === 7 ? 2 : multiplier + 1;
-    }
-    const expected = 11 - (sum % 11);
-    const expectedDv = expected === 11 ? '0' : expected === 10 ? 'K' : String(expected);
-    return dv === expectedDv;
-  }
-
-  function handleRutInput(el) {
-    el.value = formatChileanRut(el.value);
-  }
-
   function calculateAgeFromBirthDate(dateStr) {
     if (!dateStr) {
       document.getElementById('patAgeCalc').value = '';
@@ -772,184 +710,23 @@
     const descTextarea = document.getElementById('patDiagDesc');
 
     if (val === 'OTRO_MANUAL') {
-      customContainer.classList.remove('hidden');
-      saveOption.classList.remove('hidden');
-      descTextarea.value = '';
+      customContainer?.classList.remove('hidden');
+      saveOption?.classList.remove('hidden');
+      if (descTextarea) descTextarea.value = '';
     } else {
-      customContainer.classList.add('hidden');
-      saveOption.classList.add('hidden');
+      customContainer?.classList.add('hidden');
+      saveOption?.classList.add('hidden');
       const found = allDiagnosticos.find(d => d.nombre === val);
-      descTextarea.value = found ? (found.descripcion || '') : '';
+      if (descTextarea) descTextarea.value = found ? (found.descripcion || '') : '';
     }
   }
 
-  function openNewPatientModal() {
-    document.getElementById('newPatientModal').classList.remove('hidden');
-    document.getElementById('newPatientModal').classList.add('flex');
-    populateDiagnosisSelect();
-  }
-
-  function closeNewPatientModal() {
-    document.getElementById('newPatientModal').classList.add('hidden');
-    document.getElementById('newPatientModal').classList.remove('flex');
-  }
-
-  async function savePatient(e) {
-    e.preventDefault();
-    if (!supabaseClient) return showToast('Error de conexión a la base de datos.', 'error');
-
-    const rut = formatChileanRut(document.getElementById('patRut').value.trim());
-    const nombre = document.getElementById('patName').value.trim();
-    const fecha_nacimiento = document.getElementById('patBirthDate').value || null;
-    const telefono = document.getElementById('patPhone').value.trim();
-
-    const selectedDiagOption = document.getElementById('patDiagSelect').value;
-    const customDiagName = document.getElementById('patDiagNameCustom').value.trim();
-    const diagDesc = document.getElementById('patDiagDesc').value.trim();
-
-    let finalDiagName = selectedDiagOption === 'OTRO_MANUAL' ? customDiagName : selectedDiagOption;
-    if (!finalDiagName && diagDesc) finalDiagName = diagDesc;
-
-    if (!validateChileanRut(rut)) {
-      showToast(`Atención: El RUT "${rut}" no coincide con el algoritmo Módulo 11.`, 'error');
-    }
-
-    if (selectedDiagOption === 'OTRO_MANUAL' && customDiagName && document.getElementById('patSaveDiagToCatalog').checked) {
-      await supabaseClient.from('diagnosticos').insert([{ nombre: customDiagName, descripcion: diagDesc }]);
-      await loadDiagnosticos();
-    }
-
-    const { error } = await supabaseClient.from('pacientes').insert([{
-      rut, nombre, telefono, diagnostico: finalDiagName, fecha_nacimiento
-    }]);
-
-    if (error) {
-      showToast('Error al guardar paciente: ' + error.message, 'error');
-      return;
-    }
-
-    closeNewPatientModal();
-    showToast('Paciente registrado correctamente.');
-    await loadPatients();
-  }
-
-  async function loadPatients() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('pacientes').select('*').order('created_at', { ascending: false });
-    allPatients = data || [];
-    document.getElementById('statTotalPatients').textContent = allPatients.length;
-    renderPatientsGrid(allPatients);
-    populatePautaPatientSelect();
-    populateAppointmentPatients();
-    updateDashboard();
-  }
-
-  function renderPatientsGrid(list) {
-    const grid = document.getElementById('patientsGrid');
-    if (!list.length) {
-      grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">No hay pacientes registrados aún.</div>`;
-      return;
-    }
-
-    grid.innerHTML = list.map(p => {
-      const ageStr = p.fecha_nacimiento ? `${calculateAgeFromBirthDate(p.fecha_nacimiento)} años` : 'Edad no reg.';
-      return `
-        <article class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition space-y-3">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-bold text-sm text-slate-900">${escapeHtml(p.nombre)}</h3>
-              <p class="text-xs text-slate-500 font-mono">${escapeHtml(p.rut)} · <span class="text-slate-700 font-semibold">${ageStr}</span></p>
-            </div>
-            <span class="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold">Activo</span>
-          </div>
-          <p class="text-xs text-slate-600 line-clamp-2"><i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${escapeHtml(p.diagnostico || 'Sin diagnóstico')}</p>
-          <div class="grid grid-cols-2 gap-2 pt-1">
-            <button onclick="viewPatientDetail(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)}, ${JSON.stringify(p.fecha_nacimiento || '')})" class="py-2 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 text-[11px] font-bold transition">
-              <i class="fa-solid fa-chart-line mr-1"></i>Evolución
-            </button>
-            <button onclick="selectPatientForAttention(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)})" class="py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold transition">
-              <i class="fa-solid fa-plus mr-1"></i>Atención
-            </button>
-          </div>
-        </article>
-      `;
-    }).join('');
-  }
-
-  function filterPatientTable() {
-    const q = document.getElementById('patientListSearch').value.trim().toLowerCase();
-    renderPatientsGrid(allPatients.filter(p =>
-      String(p.nombre || '').toLowerCase().includes(q) ||
-      String(p.rut || '').toLowerCase().includes(q)
-    ));
-  }
-
-  async function viewPatientDetail(rut, nombre, birthDate) {
-    document.getElementById('patientChartDetail').classList.remove('hidden');
-    document.getElementById('detailPatientName').textContent = nombre;
-    document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
-    document.getElementById('detailPatientAge').textContent = birthDate ? `${calculateAgeFromBirthDate(birthDate)} años` : '';
-
-    const { data } = await supabaseClient.from('atenciones').select('*').eq('rut_paciente', rut).order('created_at', { ascending: true });
-    const history = document.getElementById('patientHistoryContainer');
-
-    if (!data || !data.length) {
-      history.innerHTML = '<p class="text-xs text-slate-400">Sin atenciones registradas aún.</p>';
-      renderEvaChart([], []);
-      return;
-    }
-
-    history.innerHTML = data.map((a, i) => `
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-        <div class="flex justify-between items-center">
-          <div>
-            <p class="text-xs font-bold text-slate-900">Sesión #${a.sesion_num || i + 1} · ${escapeHtml(a.zona || '')}</p>
-            <p class="text-[10px] text-slate-500">${formatDateTime(a.created_at)}</p>
-          </div>
-          <span class="text-xs font-bold text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</span>
-        </div>
-        ${a.notas ? `<p class="mt-1.5 text-[11px] text-slate-600">${escapeHtml(a.notas)}</p>` : ''}
-      </div>
-    `).join('');
-
-    renderEvaChart(
-      data.map((a, i) => 'Sesión ' + (a.sesion_num || i + 1)),
-      data.map(a => Number(a.eva_fin))
-    );
-  }
-
-  function closePatientChartDetail() {
-    document.getElementById('patientChartDetail').classList.add('hidden');
-  }
-
-  function renderEvaChart(labels, values) {
-    const ctx = document.getElementById('evaChartCanvas').getContext('2d');
-    if (evaChartInstance) evaChartInstance.destroy();
-
-    evaChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels.length ? labels : ['Sin datos'],
-        datasets: [{
-          label: 'Dolor EVA Final (0-10)',
-          data: values.length ? values : [0],
-          borderColor: '#0d9488',
-          backgroundColor: 'rgba(13, 148, 136, 0.15)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { min: 0, max: 10, ticks: { stepSize: 1 } } }
-      }
-    });
-  }
-
+  /* ============================================================
+     BÚSQUEDA Y SELECCIÓN DE PACIENTES PARA ATENCIÓN
+     ============================================================ */
   function filterAttentionPatients(query) {
     const resultsBox = document.getElementById('attPatientResults');
+    if (!resultsBox) return;
     const q = query.toLowerCase().trim();
     if (!q) {
       resultsBox.classList.add('hidden');
@@ -972,14 +749,15 @@
   function selectPatientForAttention(rut, nombre) {
     document.getElementById('attPatientSearch').value = `${nombre} (${rut})`;
     document.getElementById('attPatientRutSelected').value = rut;
-    document.getElementById('attPatientResults').classList.add('hidden');
+    document.getElementById('attPatientResults')?.classList.add('hidden');
     document.getElementById('attPatientSelectedLabel').textContent = `✓ Seleccionado: ${nombre} [${rut}]`;
-    document.getElementById('attPatientSelectedLabel').classList.remove('hidden');
+    document.getElementById('attPatientSelectedLabel')?.classList.remove('hidden');
     switchTab('atencion');
   }
 
   function handleZoneChange(val) {
     const customInput = document.getElementById('attZoneCustom');
+    if (!customInput) return;
     if (val === 'OTRA') {
       customInput.classList.remove('hidden');
       customInput.required = true;
@@ -989,15 +767,61 @@
     }
   }
 
+  /* ============================================================
+     PACIENTES (GUARDADO CON EDAD Y DIAGNÓSTICO)
+     ============================================================ */
+  async function savePatient(e) {
+    e.preventDefault();
+    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
+
+    const rut = formatChileanRut(document.getElementById('patRut').value.trim());
+    const nombre = document.getElementById('patName').value.trim();
+    const fecha_nacimiento = document.getElementById('patBirthDate').value || null;
+    const telefono = document.getElementById('patPhone').value.trim();
+
+    const selectedDiagOption = document.getElementById('patDiagSelect').value;
+    const customDiagName = document.getElementById('patDiagNameCustom')?.value.trim();
+    const diagDesc = document.getElementById('patDiagDesc')?.value.trim();
+
+    let finalDiagName = selectedDiagOption === 'OTRO_MANUAL' ? customDiagName : selectedDiagOption;
+    if (!finalDiagName && diagDesc) finalDiagName = diagDesc;
+
+    if (!validateChileanRut(rut)) {
+      showToast(`Atención: El RUT "${rut}" no parece coincidir con Módulo 11.`, 'error');
+    }
+
+    if (selectedDiagOption === 'OTRO_MANUAL' && customDiagName && document.getElementById('patSaveDiagToCatalog')?.checked) {
+      await supabaseClient.from('diagnosticos').insert([{ nombre: customDiagName, descripcion: diagDesc }]);
+      await loadDiagnosticos();
+    }
+
+    const { error } = await supabaseClient.from('pacientes').insert([{
+      rut, nombre, telefono, diagnostico: finalDiagName, fecha_nacimiento
+    }]);
+
+    if (error) {
+      showToast('No se pudo guardar: ' + error.message, 'error');
+      return;
+    }
+
+    closeNewPatientModal();
+    showToast('Paciente guardado correctamente.');
+    await loadPatients();
+    await populateAppointmentPatients();
+  }
+
+  /* ============================================================
+     ATENCIONES (GUARDADO CON ZONA, EVA Y CORRELATIVO)
+     ============================================================ */
   async function saveAttention(e) {
     e.preventDefault();
-    if (!supabaseClient) return showToast('Error de conexión a Supabase.', 'error');
+    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
 
-    const rut_paciente = document.getElementById('attPatientRutSelected').value;
+    const rut_paciente = document.getElementById('attPatientRutSelected')?.value;
     if (!rut_paciente) return showToast('Por favor selecciona un paciente de la lista.', 'error');
 
-    const zoneSelect = document.getElementById('attZoneSelect').value;
-    const zoneCustom = document.getElementById('attZoneCustom').value.trim();
+    const zoneSelect = document.getElementById('attZoneSelect')?.value;
+    const zoneCustom = document.getElementById('attZoneCustom')?.value.trim();
     const zona = zoneSelect === 'OTRA' ? zoneCustom : zoneSelect;
 
     const eva_inicio = Number(document.getElementById('attEvaInicio').value);
@@ -1006,9 +830,17 @@
 
     if (isNaN(eva_inicio) || isNaN(eva_fin)) return showToast('Selecciona el dolor EVA inicial y final.', 'error');
 
-    const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true }).eq('rut_paciente', rut_paciente);
-    const sesion_num = (count || 0) + 1;
+    const { count, error: countError } = await supabaseClient
+      .from('atenciones')
+      .select('*', { count: 'exact', head: true })
+      .eq('rut_paciente', rut_paciente);
 
+    if (countError) {
+      showToast('No se pudo calcular el número de sesión.', 'error');
+      return;
+    }
+
+    const sesion_num = (count || 0) + 1;
     const { error } = await supabaseClient.from('atenciones').insert([{
       rut_paciente, zona, eva_inicio, eva_fin, notas, sesion_num
     }]);
@@ -1021,7 +853,7 @@
     showToast(`Atención registrada exitosamente (Sesión #${sesion_num}).`);
     document.getElementById('attPatientSearch').value = '';
     document.getElementById('attPatientRutSelected').value = '';
-    document.getElementById('attPatientSelectedLabel').classList.add('hidden');
+    document.getElementById('attPatientSelectedLabel')?.classList.add('hidden');
     document.getElementById('attNotes').value = '';
     await loadPatients();
   }
