@@ -7,15 +7,11 @@
   <meta name="description" content="PWA clínica CyJ Kinesiología">
   <title>CyJ Kinesiología | Panel Clínico</title>
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-  <!-- Chart.js & Supabase Client -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -44,33 +40,38 @@
     .nav-item.active { background: #0d9488; color: white; box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2); }
     .eva-btn { width: 100%; aspect-ratio: 1; border-radius: 0.5rem; font-weight: 700; font-size: 0.875rem; border: 1px solid #cbd5e1; background: #f8fafc; transition: all 0.15s; }
     .eva-btn:hover { border-color: #0d9488; background: #f0fdfa; }
-    .eva-btn.selected { background: #0d9488; color: white; border-color: #0f766e; shadow: 0 4px 10px rgba(13, 148, 136, 0.3); }
+    .eva-btn.selected { background: #0d9488; color: white; border-color: #0f766e; box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3); }
   </style>
 </head>
 
 <body class="h-full bg-slate-100 text-slate-800 font-sans antialiased overflow-hidden">
 
-<!-- LOGIN / BLOQUEO DE UI -->
 <div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
   <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl border border-slate-100">
     <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-teal-500/30">
       <i class="fa-solid fa-user-doctor"></i>
     </div>
     <h1 class="mt-5 text-center font-heading font-bold text-xl text-slate-900">Panel Clínico</h1>
-    <p class="mt-1 text-center text-xs text-slate-500">CyJ Kinesiología · Kinesiologo Cristian</p>
+    <p class="mt-1 text-center text-xs text-slate-500">CyJ Kinesiología · Acceso Profesional</p>
 
     <form onsubmit="handleLogin(event)" class="mt-6 space-y-4">
       <div>
-        <label class="label">Clave de acceso profesional</label>
+        <label class="label">Correo Electrónico Autorizado</label>
+        <input id="loginEmailInput" type="email" autocomplete="username" required value="cristian@cyj.cl"
+          class="input font-medium text-slate-900">
+      </div>
+      <div>
+        <label class="label">Contraseña de Acceso</label>
         <input id="loginPinInput" type="password" autocomplete="current-password" required placeholder="••••••••"
           class="input text-center tracking-widest font-bold text-slate-900">
       </div>
-      <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/30 transition text-xs uppercase tracking-wider">
-        Ingresar al Panel
+      <button id="loginSubmitBtn" type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/30 transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>Iniciar Sesión en Servidor</span>
       </button>
     </form>
     <p class="mt-5 text-center text-[10px] text-slate-400">
-      Protección de Fichas Médicas y Registros Clínicos
+      <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>Protegido por Supabase Auth + Encriptación RLS
     </p>
   </div>
 </div>
@@ -83,7 +84,6 @@
   </div>
 </div>
 
-<!-- HEADER MÓVIL -->
 <header class="md:hidden h-14 shrink-0 bg-slate-950 text-white flex items-center justify-between px-4 border-b border-slate-800 z-40">
   <button onclick="toggleSidebar()" class="p-2 text-slate-300 hover:text-white" aria-label="Abrir menú"><i class="fa-solid fa-bars text-lg"></i></button>
   <div class="font-heading font-bold text-sm tracking-wide">CyJ Kinesiología</div>
@@ -131,12 +131,12 @@
           <div class="w-8 h-8 rounded-full bg-teal-900/80 text-teal-300 font-bold text-xs flex items-center justify-center border border-teal-700">
             KC
           </div>
-          <div>
-            <p class="text-xs font-bold text-white">Kinesiologo Cristian</p>
-            <p class="text-[10px] text-slate-400">Klgo. Tratanat</p>
+          <div class="min-w-0">
+            <p id="currentUserLabel" class="text-xs font-bold text-white truncate">Kinesiologo Cristian</p>
+            <p class="text-[10px] text-slate-400 truncate">Sesión Autenticada</p>
           </div>
         </div>
-        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-white" title="Bloquear"><i class="fa-solid fa-lock text-xs"></i></button>
+        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-red-400 transition" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket text-xs"></i></button>
       </div>
     </div>
   </aside>
@@ -154,7 +154,6 @@
       </button>
     </div>
 
-    <!-- TAB 1: DASHBOARD -->
     <section id="tab-dashboard" class="tab-content space-y-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
@@ -182,7 +181,7 @@
             <i class="fa-solid fa-calendar-check"></i>
           </div>
           <div>
-            <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones de este mes</p>
+            <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones este Mes</p>
             <p id="statMonthAttentions" class="text-2xl font-heading font-bold text-teal-700">0</p>
           </div>
         </div>
@@ -205,7 +204,7 @@
           </span>
           <h2 class="font-heading font-bold text-xl sm:text-2xl">¡Bienvenido, Kinesiologo Cristian!</h2>
           <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Plataforma clínica para el registro de evolución en tratamiento, medición objetiva de dolor EVA, prescripción de pautas y agenda sincronizable.
+            Plataforma clínica protegida por Supabase Auth para el registro de evolución, medición objetiva de dolor EVA, prescripción de pautas y agenda de citas.
           </p>
         </div>
 
@@ -221,7 +220,6 @@
       </div>
     </section>
 
-    <!-- TAB 2: PACIENTES -->
     <section id="tab-pacientes" class="tab-content hidden space-y-6">
       <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-col sm:flex-row gap-3">
@@ -263,7 +261,6 @@
       </div>
     </section>
 
-    <!-- TAB 3: NUEVA ATENCIÓN KINÉSICA -->
     <section id="tab-atencion" class="tab-content hidden">
       <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm space-y-6">
         <div>
@@ -341,7 +338,6 @@
       </div>
     </section>
 
-    <!-- TAB 4: PAUTAS -->
     <section id="tab-pautas" class="tab-content hidden space-y-6">
       <div class="grid xl:grid-cols-[1fr_1.2fr] gap-6">
         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
@@ -391,7 +387,6 @@
       </div>
     </section>
 
-    <!-- TAB 5: AGENDA & CITAS -->
     <section id="tab-agenda" class="tab-content hidden space-y-6">
       <div class="grid xl:grid-cols-[1fr_1.4fr] gap-6">
         <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
@@ -537,9 +532,6 @@
 </div>
 
 <script>
-  /* ============================================================
-     CONFIGURACIÓN & VARIABLES GLOBALES
-     ============================================================ */
   const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
   const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtocHVqaGZ6Yml4aXdwenVzdW50Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxNjE3OTQsImV4cCI6MjA1NTczNzc5NH0.Z_8r2E17eI59Xy031Nn_6R3S7xJg9K4f_Z0Jk9P1_L8';
 
@@ -568,10 +560,71 @@
     if (!window.supabase) return;
     try {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      loadInitialData();
+      checkAuthSession();
     } catch (error) {
       console.error('Error inicializando Supabase:', error);
     }
+  }
+
+  async function checkAuthSession() {
+    if (!supabaseClient) return;
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('currentUserLabel').textContent = session.user.email;
+        loadInitialData();
+      } else {
+        document.getElementById('loginOverlay').classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error('Error verificando sesión Supabase Auth:', err);
+    }
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmailInput').value.trim();
+    const password = document.getElementById('loginPinInput').value;
+    const btn = document.getElementById('loginSubmitBtn');
+
+    if (!supabaseClient) {
+      showToast('Error de conexión con el servidor Supabase.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+      if (error) {
+        showToast('Credenciales incorrectas: ' + error.message, 'error');
+      } else if (data && data.session) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('currentUserLabel').textContent = data.user.email;
+        showToast('¡Sesión iniciada exitosamente!');
+        await loadInitialData();
+      }
+    } catch (err) {
+      showToast('Error al autenticar: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión en Servidor';
+    }
+  }
+
+  async function lockSystem() {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('loginPinInput').value = '';
+    showToast('Sesión cerrada.');
   }
 
   async function loadInitialData() {
@@ -609,30 +662,6 @@
       document.getElementById('attEvaFin').value = val;
       document.getElementById('evaFinVal').textContent = `EVA: ${val}`;
     }
-  }
-
-  /* ============================================================
-     LOGIN / SEGURIDAD
-     ============================================================ */
-  function handleLogin(e) {
-    e.preventDefault();
-    const pin = document.getElementById('loginPinInput').value;
-    if (pin === '#20ErEj24*' || pin === '1234') {
-      document.getElementById('loginOverlay').classList.add('hidden');
-      sessionStorage.setItem('kine_ui_unlocked', '1');
-    } else {
-      showToast('Clave de acceso incorrecta.', 'error');
-    }
-  }
-
-  function lockSystem() {
-    sessionStorage.removeItem('kine_ui_unlocked');
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('loginPinInput').value = '';
-  }
-
-  if (sessionStorage.getItem('kine_ui_unlocked') === '1') {
-    document.getElementById('loginOverlay').classList.add('hidden');
   }
 
   /* ============================================================
@@ -679,9 +708,6 @@
     if (window.innerWidth < 768) closeSidebar();
   }
 
-  /* ============================================================
-     FORMATO Y VALIDACIÓN RUT CHILENO
-     ============================================================ */
   function formatChileanRut(value) {
     const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
     if (clean.length < 2) return clean;
@@ -709,9 +735,6 @@
     el.value = formatChileanRut(el.value);
   }
 
-  /* ============================================================
-     CÁLCULO AUTOMÁTICO DE EDAD
-     ============================================================ */
   function calculateAgeFromBirthDate(dateStr) {
     if (!dateStr) {
       document.getElementById('patAgeCalc').value = '';
@@ -728,12 +751,9 @@
     return age;
   }
 
-  /* ============================================================
-     DIAGNÓSTICOS (CARGA Y CREACIÓN)
-     ============================================================ */
   async function loadDiagnosticos() {
     if (!supabaseClient) return;
-    const { data, error } = await supabaseClient.from('diagnosticos').select('*').order('nombre');
+    const { data } = await supabaseClient.from('diagnosticos').select('*').order('nombre');
     allDiagnosticos = data || [];
     populateDiagnosisSelect();
   }
@@ -763,9 +783,6 @@
     }
   }
 
-  /* ============================================================
-     PACIENTES (CRUD)
-     ============================================================ */
   function openNewPatientModal() {
     document.getElementById('newPatientModal').classList.remove('hidden');
     document.getElementById('newPatientModal').classList.add('flex');
@@ -794,10 +811,9 @@
     if (!finalDiagName && diagDesc) finalDiagName = diagDesc;
 
     if (!validateChileanRut(rut)) {
-      if (!confirm(`El RUT "${rut}" no coincide con el algoritmo verificador. ¿Deseas guardarlo de todos modos?`)) return;
+      showToast(`Atención: El RUT "${rut}" no coincide con el algoritmo Módulo 11.`, 'error');
     }
 
-    // Si marcó guardar nuevo diagnóstico a la biblioteca
     if (selectedDiagOption === 'OTRO_MANUAL' && customDiagName && document.getElementById('patSaveDiagToCatalog').checked) {
       await supabaseClient.from('diagnosticos').insert([{ nombre: customDiagName, descripcion: diagDesc }]);
       await loadDiagnosticos();
@@ -932,9 +948,6 @@
     });
   }
 
-  /* ============================================================
-     NUEVA ATENCIÓN KINÉSICA
-     ============================================================ */
   function filterAttentionPatients(query) {
     const resultsBox = document.getElementById('attPatientResults');
     const q = query.toLowerCase().trim();
@@ -993,7 +1006,6 @@
 
     if (isNaN(eva_inicio) || isNaN(eva_fin)) return showToast('Selecciona el dolor EVA inicial y final.', 'error');
 
-    // Calcular correlativo automático sesion_num
     const { count } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true }).eq('rut_paciente', rut_paciente);
     const sesion_num = (count || 0) + 1;
 
@@ -1014,9 +1026,6 @@
     await loadPatients();
   }
 
-  /* ============================================================
-     PAUTAS DE EJERCICIO
-     ============================================================ */
   async function loadExercises() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('ejercicios').select('*').order('nombre');
@@ -1108,9 +1117,6 @@
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   }
 
-  /* ============================================================
-     AGENDA & CITAS
-     ============================================================ */
   function setDefaultAppointmentDateTime() {
     const now = new Date();
     document.getElementById('apptDate').value = now.toISOString().slice(0, 10);
@@ -1200,9 +1206,6 @@
     window.open(`https://wa.me/${p.phone}?text=${encodeURIComponent(text)}`, '_blank');
   }
 
-  /* ============================================================
-     HELPERS UTILITARIOS
-     ============================================================ */
   function normalizePhone(phone) {
     let clean = String(phone || '').replace(/[^\d]/g, '');
     if (!clean) return '';
