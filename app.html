@@ -46,7 +46,6 @@
 
 <body class="h-full bg-slate-100 text-slate-800 font-sans antialiased overflow-hidden">
 
-<!-- LOGIN / BLOQUEO DE UI CON SUPABASE AUTH -->
 <div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
   <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl">
     <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg">
@@ -78,12 +77,14 @@
 </div>
 
 <!-- TOAST -->
+<div id="toast" class="toast fixed bottom-5 right-5 z-[120] max-w-sm bg-slate-900 text-white rounded-2xl px-4 py-3 shadow-2xl text-xs">
   <div class="flex items-start gap-3">
     <i id="toastIcon" class="fa-solid fa-circle-check text-teal-400 mt-0.5"></i>
     <p id="toastMessage"></p>
   </div>
 </div>
 
+<!-- HEADER MÓVIL -->
 <header class="md:hidden h-14 shrink-0 bg-slate-950 text-white flex items-center justify-between px-4 border-b border-slate-800 z-40">
   <button onclick="toggleSidebar()" class="p-2 text-slate-300 hover:text-white" aria-label="Abrir menú"><i class="fa-solid fa-bars text-lg"></i></button>
   <div class="font-heading font-bold text-sm tracking-wide">CyJ Kinesiología</div>
@@ -93,7 +94,6 @@
 <div class="flex h-[calc(100vh-0px)] md:h-full">
   <div id="sidebarBackdrop" onclick="closeSidebar()" class="hidden fixed inset-0 bg-slate-950/60 z-40 md:hidden"></div>
 
-  <!-- SIDEBAR LATERAL -->
   <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
     <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
       <div class="flex items-center gap-3 pb-5 border-b border-slate-800">
@@ -136,6 +136,7 @@
     </div>
   </aside>
 
+  <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 min-w-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200">
       <div>
@@ -255,7 +256,6 @@
       </div>
     </section>
 
-    <!-- ATENCION -->
     <section id="tab-atencion" class="tab-content hidden">
       <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm">
         <div>
@@ -427,21 +427,11 @@
   </main>
 </div>
 
-<!-- MODAL: NUEVO PACIENTE -->
 <div id="newPatientModal" class="hidden fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
   <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 border border-slate-100">
     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
       <h2 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h2>
       <button onclick="closeNewPatientModal()" class="p-1 text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
-    </div>
-
-    <form onsubmit="savePatient(event)" class="space-y-3.5">
-<!-- MODAL NUEVO PACIENTE -->
-<div id="newPatientModal" class="hidden fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
-  <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
-    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-      <h2 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h2>
-      <button onclick="closeNewPatientModal()" class="p-2 text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <form onsubmit="savePatient(event)" class="space-y-3.5">
@@ -547,19 +537,6 @@
   const CLINIC_NAME = 'CyJ Kinesiología';
   const PROFESSIONAL_NAME = 'Klgo. Cristian Barrera Pinto';
   const DEFAULT_APPOINTMENT_DURATION = 60;
-  const CLINIC_PHONE = '56912345678';
-
-  document.head.insertAdjacentHTML('beforeend', `
-    <style>
-      .label{display:block;font-size:.75rem;font-weight:600;color:#334155;margin-bottom:.35rem}
-      .input{width:100%;padding:.65rem .85rem;border:1px solid #cbd5e1;border-radius:.75rem;font-size:.875rem;outline:none;background:white}
-      .input:focus{border-color:#14b8a6;box-shadow:0 0 0 2px rgba(20,184,166,.15)}
-      .nav-item.active{background:#0d9488;color:white;box-shadow:0 8px 20px rgba(13,148,136,.18)}
-      .eva-btn{width:100%;aspect-ratio:1;border-radius:.5rem;font-weight:700;font-size:.875rem;border:1px solid #cbd5e1;background:#f8fafc;transition:all .15s}
-      .eva-btn:hover{border-color:#0d9488;background:#f0fdfa}
-      .eva-btn.selected{background:#0d9488;color:white;border-color:#0f766e;box-shadow:0 4px 10px rgba(13,148,136,.3)}
-    </style>
-  `);
 
   window.addEventListener('load', async () => {
     initSupabase();
@@ -642,6 +619,76 @@
     showToast('Sesión cerrada.');
   }
 
+  async function loadInitialData() {
+    await Promise.all([
+      loadPatients(),
+      loadExercises(),
+      loadDiagnosticos(),
+      loadAppointments()
+    ]);
+    updateDashboard();
+  }
+
+  /* ============================================================
+     UI & TOASTS
+     ============================================================ */
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    document.getElementById('toastMessage').textContent = message;
+    document.getElementById('toastIcon').className = type === 'error'
+      ? 'fa-solid fa-circle-exclamation text-red-400 mt-0.5'
+      : 'fa-solid fa-circle-check text-teal-400 mt-0.5';
+    toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    document.getElementById('sidebarBackdrop').classList.toggle('hidden');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarBackdrop').classList.add('hidden');
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+    document.getElementById('tab-' + tabId)?.classList.remove('hidden');
+    document.getElementById('nav-' + tabId)?.classList.add('active');
+
+    const meta = {
+      dashboard: ['Inicio & Métricas', 'Seguimiento clínico y gestión de pacientes.'],
+      pacientes: ['Pacientes & RUT', 'Búsqueda, ficha y evolución EVA.'],
+      atencion: ['Nueva Atención Kinésica', 'Registro clínico de evolución y dolor.'],
+      pautas: ['Pautas de Ejercicio', 'Biblioteca y envío asistido de pautas.'],
+      agenda: ['Agenda & Citas', 'Citas, Google Calendar, ICS y recordatorios.']
+    };
+
+    document.getElementById('currentTabTitle').textContent = meta[tabId]?.[0] || 'Panel Clínico';
+    document.getElementById('currentTabSubtitle').textContent = meta[tabId]?.[1] || '';
+    if (window.innerWidth < 768) closeSidebar();
+  }
+
+  function openNewPatientModal() {
+    loadDiagnosticos();
+    document.getElementById('newPatientModal').classList.remove('hidden');
+    document.getElementById('newPatientModal').classList.add('flex');
+  }
+
+  function closeNewPatientModal() {
+    document.getElementById('newPatientModal').classList.add('hidden');
+    document.getElementById('newPatientModal').classList.remove('flex');
+  }
+
+  function closeAppointmentActionModal() {
+    document.getElementById('appointmentActionModal').classList.add('hidden');
+    document.getElementById('appointmentActionModal').classList.remove('flex');
+  }
+
   /* ============================================================
      BOTONERA EVA INTERACTIVA (0-10)
      ============================================================ */
@@ -668,6 +715,38 @@
       document.getElementById('attEvaFin').value = val;
       document.getElementById('evaFinVal').textContent = `EVA: ${val}`;
     }
+  }
+
+  /* ============================================================
+     RUT CHILENO
+     ============================================================ */
+  function formatChileanRut(value) {
+    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length < 2) return clean;
+    const dv = clean.slice(-1);
+    const body = clean.slice(0, -1);
+    return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+  }
+
+  function validateChileanRut(value) {
+    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length < 2) return false;
+    const dv = clean.slice(-1);
+    const body = clean.slice(0, -1);
+    if (!/^\d+$/.test(body)) return false;
+
+    let sum = 0, multiplier = 2;
+    for (let i = body.length - 1; i >= 0; i--) {
+      sum += Number(body[i]) * multiplier;
+      multiplier = multiplier === 7 ? 2 : multiplier + 1;
+    }
+    const expected = 11 - (sum % 11);
+    const expectedDv = expected === 11 ? '0' : expected === 10 ? 'K' : String(expected);
+    return dv === expectedDv;
+  }
+
+  function handleRutInput(el) {
+    el.value = formatChileanRut(el.value);
   }
 
   /* ============================================================
@@ -752,7 +831,6 @@
     document.getElementById('attPatientResults')?.classList.add('hidden');
     document.getElementById('attPatientSelectedLabel').textContent = `✓ Seleccionado: ${nombre} [${rut}]`;
     document.getElementById('attPatientSelectedLabel')?.classList.remove('hidden');
-    switchTab('atencion');
   }
 
   function handleZoneChange(val) {
@@ -768,7 +846,7 @@
   }
 
   /* ============================================================
-     PACIENTES (GUARDADO CON EDAD Y DIAGNÓSTICO)
+     PACIENTES
      ============================================================ */
   async function savePatient(e) {
     e.preventDefault();
@@ -807,12 +885,155 @@
     closeNewPatientModal();
     showToast('Paciente guardado correctamente.');
     await loadPatients();
-    await populateAppointmentPatients();
   }
 
-  /* ============================================================
-     ATENCIONES (GUARDADO CON ZONA, EVA Y CORRELATIVO)
-     ============================================================ */
+  async function loadPatients() {
+    if (!supabaseClient) return;
+    const { data, error } = await supabaseClient
+      .from('pacientes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(error);
+      showToast('No se pudieron cargar los pacientes.', 'error');
+      return;
+    }
+
+    allPatients = data || [];
+    document.getElementById('statTotalPatients').textContent = allPatients.length;
+    renderPatientsGrid(allPatients);
+    populatePautaPatientSelect();
+    populateAppointmentPatients();
+    updateDashboard();
+  }
+
+  function renderPatientsGrid(list) {
+    const grid = document.getElementById('patientsGrid');
+    if (!list.length) {
+      grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">No hay pacientes que coincidan.</div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(p => {
+      let ageText = '';
+      if (p.fecha_nacimiento) {
+        const b = new Date(p.fecha_nacimiento);
+        const t = new Date();
+        let age = t.getFullYear() - b.getFullYear();
+        if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) age--;
+        if (age >= 0) ageText = `${age} años`;
+      }
+
+      return `
+        <article class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3 hover:border-teal-500 transition">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-sm text-slate-900">${escapeHtml(p.nombre)}</h3>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-xs text-slate-500 font-mono">${escapeHtml(p.rut)}</span>
+                ${ageText ? `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-semibold">${ageText}</span>` : ''}
+              </div>
+            </div>
+            <span class="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold">Activo</span>
+          </div>
+          <p class="text-xs text-slate-600 line-clamp-2">
+            <i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${escapeHtml(p.diagnostico || 'Sin diagnóstico')}
+          </p>
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+            <button onclick="viewPatientDetail(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)}, ${JSON.stringify(ageText)})" class="py-2 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 text-[11px] font-bold transition">
+              <i class="fa-solid fa-chart-line mr-1"></i>Evolución
+            </button>
+            <button onclick="selectPatientForAttention(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)})" class="py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold transition">
+              <i class="fa-solid fa-circle-plus mr-1"></i>Atención
+            </button>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function filterPatientTable() {
+    const q = document.getElementById('patientListSearch').value.trim().toLowerCase();
+    renderPatientsGrid(allPatients.filter(p =>
+      String(p.nombre || '').toLowerCase().includes(q) ||
+      String(p.rut || '').toLowerCase().includes(q)
+    ));
+  }
+
+  async function viewPatientDetail(rut, nombre, edad = '') {
+    document.getElementById('patientChartDetail').classList.remove('hidden');
+    document.getElementById('detailPatientName').textContent = nombre;
+    document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
+    document.getElementById('detailPatientAge').textContent = edad;
+
+    const { data, error } = await supabaseClient
+      .from('atenciones')
+      .select('*')
+      .eq('rut_paciente', rut)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      showToast('No se pudo cargar la evolución.', 'error');
+      return;
+    }
+
+    const history = document.getElementById('patientHistoryContainer');
+    if (!data?.length) {
+      history.innerHTML = '<p class="text-xs text-slate-400">Sin atenciones registradas.</p>';
+      renderEvaChart([], []);
+      return;
+    }
+
+    history.innerHTML = data.map((a, i) => `
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold text-slate-800">Sesión #${a.sesion_num || i + 1} · ${escapeHtml(a.zona || '')}</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">${formatDateTime(a.created_at)}</p>
+          </div>
+          <strong class="text-xs font-bold text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</strong>
+        </div>
+        ${a.notas ? `<p class="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">${escapeHtml(a.notas)}</p>` : ''}
+      </div>
+    `).join('');
+
+    renderEvaChart(
+      data.map((a, i) => 'Sesión ' + (a.sesion_num || i + 1)),
+      data.map(a => Number(a.eva_fin))
+    );
+  }
+
+  function closePatientChartDetail() {
+    document.getElementById('patientChartDetail').classList.add('hidden');
+  }
+
+  function renderEvaChart(labels, values) {
+    const ctx = document.getElementById('evaChartCanvas').getContext('2d');
+    if (evaChartInstance) evaChartInstance.destroy();
+
+    evaChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels.length ? labels : ['Sin datos'],
+        datasets: [{
+          label: 'EVA final',
+          data: values.length ? values : [0],
+          borderColor: '#0d9488',
+          backgroundColor: 'rgba(13,148,136,.15)',
+          fill: true,
+          tension: .3,
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { min: 0, max: 10, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
   async function saveAttention(e) {
     e.preventDefault();
     if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
@@ -858,6 +1079,9 @@
     await loadPatients();
   }
 
+  /* ============================================================
+     EJERCICIOS / PAUTAS
+     ============================================================ */
   async function loadExercises() {
     if (!supabaseClient) return;
     const { data } = await supabaseClient.from('ejercicios').select('*').order('nombre');
@@ -949,6 +1173,23 @@
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
   }
 
+  function copyRoutineText() {
+    let text = `🏥 *${CLINIC_NAME} - PAUTA DE EJERCICIOS*\n👨‍⚕️ *${PROFESSIONAL_NAME}*\n\n`;
+    if (selectedExercises.length) {
+      selectedExercises.forEach((ex, i) => {
+        text += `*${i + 1}. ${ex.nombre}*\n• ${ex.series || '3'} series x ${ex.repeticiones || '12'} reps\n\n`;
+      });
+    }
+    const extra = document.getElementById('pautaExtra').value.trim();
+    if (extra) text += `📌 *Indicaciones:* ${extra}\n`;
+
+    document.execCommand('copy');
+    showToast('Pauta copiada al portapapeles.');
+  }
+
+  /* ============================================================
+     AGENDA & CITAS
+     ============================================================ */
   function setDefaultAppointmentDateTime() {
     const now = new Date();
     document.getElementById('apptDate').value = now.toISOString().slice(0, 10);
@@ -1026,16 +1267,29 @@
     }).join('');
   }
 
-  function closeAppointmentActionModal() {
-    document.getElementById('appointmentActionModal').classList.add('hidden');
-    document.getElementById('appointmentActionModal').classList.remove('flex');
-  }
-
   function sendCurrentReminderWhatsApp() {
     if (!currentAppointmentPayload) return;
     const p = currentAppointmentPayload;
     const text = `Hola ${p.patientName}, te recordamos tu cita de Kinesiología para el día ${p.date} a las ${p.time} hrs con ${PROFESSIONAL_NAME} (${CLINIC_NAME}).`;
     window.open(`https://wa.me/${p.phone}?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
+  function downloadCurrentICS() {
+    if (!currentAppointmentPayload) return;
+    const p = currentAppointmentPayload;
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CyJ Kinesiologia//ES\nBEGIN:VEVENT\nSUMMARY:Cita Kinesiología - ${p.patientName}\nDESCRIPTION:Cita kinésica con ${PROFESSIONAL_NAME}\nLOCATION:${CLINIC_NAME}\nDTSTART:${p.date.replace(/-/g, '')}T${p.time.replace(':', '')}00\nBEGIN:VALARM\nTRIGGER:-P1D\nACTION:DISPLAY\nEND:VALARM\nBEGIN:VALARM\nTRIGGER:-PT1H\nACTION:DISPLAY\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `cita-${p.patientName}.ics`;
+    link.click();
+  }
+
+  function openCurrentGoogleCalendar() {
+    if (!currentAppointmentPayload) return;
+    const p = currentAppointmentPayload;
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Cita+Kinesiología+-+${encodeURIComponent(p.patientName)}&details=Atención+con+${encodeURIComponent(PROFESSIONAL_NAME)}`;
+    window.open(url, '_blank');
   }
 
   function normalizePhone(phone) {
