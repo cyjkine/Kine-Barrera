@@ -1,1329 +1,6041 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-100">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0f172a">
-  <meta name="description" content="PWA clínica CyJ Kinesiología">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="Panel clínico CyJ Kinesiología">
+
   <title>CyJ Kinesiología | Panel Clínico</title>
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- FontAwesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            heading: ['Poppins', 'sans-serif']
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    .toast { transform: translateY(20px); opacity: 0; pointer-events: none; transition: .2s ease; }
-    .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    .label { display: block; font-size: 0.75rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem; }
-    .input { width: 100%; padding: 0.65rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 0.75rem; font-size: 0.875rem; outline: none; background: white; transition: all 0.2s; }
-    .input:focus { border-color: #14b8a6; box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15); }
-    .nav-item.active { background: #0d9488; color: white; box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2); }
-    .eva-btn { width: 100%; aspect-ratio: 1; border-radius: 0.5rem; font-weight: 700; font-size: 0.875rem; border: 1px solid #cbd5e1; background: #f8fafc; transition: all 0.15s; }
-    .eva-btn:hover { border-color: #0d9488; background: #f0fdfa; }
-    .eva-btn.selected { background: #0d9488; color: white; border-color: #0f766e; box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3); }
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #0f172a;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    }
+
+    .hidden-view {
+      display: none !important;
+    }
+
+    .tab-btn.active {
+      background: #0f766e;
+      color: white;
+      box-shadow: 0 4px 12px rgba(15, 118, 110, 0.18);
+    }
+
+    .card-hover {
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+    }
+
+    .clickable {
+      cursor: pointer;
+    }
+
+    .modal-backdrop {
+      background: rgba(15, 23, 42, .55);
+      backdrop-filter: blur(3px);
+    }
+
+    .autocomplete-item {
+      transition: background .15s ease;
+    }
+
+    .autocomplete-item:hover {
+      background: #f0fdfa;
+    }
+
+    .scrollbar::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+
+    .scrollbar::-webkit-scrollbar-track {
+      background: #e2e8f0;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 999px;
+    }
+
+    .toast {
+      animation: toastIn .25s ease-out;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #0f766e !important;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, .1);
+    }
+
+    .eva-range {
+      accent-color: #0f766e;
+    }
+
+    @media (max-width: 768px) {
+      .desktop-sidebar {
+        display: none;
+      }
+    }
   </style>
 </head>
 
-<body class="h-full bg-slate-100 text-slate-800 font-sans antialiased overflow-hidden">
+<body>
 
-<div id="loginOverlay" class="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
-  <div class="w-full max-w-sm bg-white rounded-3xl p-7 shadow-2xl">
-    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white flex items-center justify-center text-2xl shadow-lg">
-      <i class="fa-solid fa-user-doctor"></i>
+<!-- ============================================================
+     AUTH
+============================================================ -->
+
+<section
+  id="authView"
+  class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-teal-950 px-4"
+>
+  <div class="w-full max-w-md">
+
+    <div class="text-center text-white mb-8">
+      <div
+        class="mx-auto mb-4 w-20 h-20 rounded-3xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center"
+      >
+        <i class="fa-solid fa-heart-pulse text-4xl text-teal-300"></i>
+      </div>
+
+      <h1 class="text-3xl font-bold">
+        CyJ Kinesiología
+      </h1>
+
+      <p class="text-slate-300 mt-2">
+        Panel clínico privado
+      </p>
     </div>
-    <h1 class="mt-5 text-center font-heading font-bold text-xl text-slate-900">Panel Clínico</h1>
-    <p class="mt-1 text-center text-xs text-slate-500">CyJ Kinesiología · Acceso Profesional</p>
 
-    <form onsubmit="handleLogin(event)" class="mt-6 space-y-4">
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Correo Electrónico Autorizado</label>
-        <input id="loginEmailInput" type="email" autocomplete="username" required value="cristian@cyj.cl"
-          class="w-full px-4 py-3 rounded-xl border border-slate-300 font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Contraseña de Acceso</label>
-        <input id="loginPinInput" type="password" autocomplete="current-password" required placeholder="••••••••"
-          class="w-full px-4 py-3 rounded-xl border border-slate-300 text-center tracking-widest font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500">
-      </div>
-      <button id="loginSubmitBtn" type="submit" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-        <i class="fa-solid fa-right-to-bracket"></i>
-        <span>Iniciar Sesión en Servidor</span>
-      </button>
-    </form>
-    <p class="mt-5 text-center text-[10px] text-slate-400">
-      <i class="fa-solid fa-shield-halved text-teal-600 mr-1"></i>Protegido por Supabase Auth + Encriptación RLS
+    <div class="bg-white rounded-3xl shadow-2xl p-7">
+
+      <h2 class="text-xl font-bold text-slate-800">
+        Acceso profesional
+      </h2>
+
+      <p class="text-sm text-slate-500 mt-1 mb-6">
+        Ingrese sus credenciales para acceder al sistema.
+      </p>
+
+      <form id="loginForm" class="space-y-4">
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">
+            Correo electrónico
+          </label>
+
+          <input
+            id="loginEmail"
+            type="email"
+            required
+            autocomplete="username"
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+            placeholder="profesional@correo.cl"
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1">
+            Contraseña
+          </label>
+
+          <div class="relative">
+            <input
+              id="loginPassword"
+              type="password"
+              required
+              autocomplete="current-password"
+              class="w-full border border-slate-300 rounded-xl px-4 py-3 pr-12"
+              placeholder="••••••••"
+            >
+
+            <button
+              type="button"
+              id="togglePassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button
+          id="loginButton"
+          type="submit"
+          class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-xl transition"
+        >
+          <i class="fa-solid fa-right-to-bracket mr-2"></i>
+          Ingresar
+        </button>
+
+        <p
+          id="loginError"
+          class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3"
+        ></p>
+
+      </form>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 mt-6">
+      Sistema clínico CyJ Kinesiología
     </p>
+
   </div>
-</div>
+</section>
 
-<!-- TOAST -->
-<div id="toast" class="toast fixed bottom-5 right-5 z-[120] max-w-sm bg-slate-900 text-white rounded-2xl px-4 py-3 shadow-2xl text-xs">
-  <div class="flex items-start gap-3">
-    <i id="toastIcon" class="fa-solid fa-circle-check text-teal-400 mt-0.5"></i>
-    <p id="toastMessage"></p>
-  </div>
-</div>
 
-<!-- HEADER MÓVIL -->
-<header class="md:hidden h-14 shrink-0 bg-slate-950 text-white flex items-center justify-between px-4 border-b border-slate-800 z-40">
-  <button onclick="toggleSidebar()" class="p-2 text-slate-300 hover:text-white" aria-label="Abrir menú"><i class="fa-solid fa-bars text-lg"></i></button>
-  <div class="font-heading font-bold text-sm tracking-wide">CyJ Kinesiología</div>
-  <button onclick="lockSystem()" class="p-2 text-slate-300 hover:text-white" aria-label="Bloquear"><i class="fa-solid fa-lock text-teal-400"></i></button>
-</header>
+<!-- ============================================================
+     APPLICATION
+============================================================ -->
 
-<div class="flex h-[calc(100vh-0px)] md:h-full">
-  <div id="sidebarBackdrop" onclick="closeSidebar()" class="hidden fixed inset-0 bg-slate-950/60 z-40 md:hidden"></div>
+<div id="appView" class="hidden-view min-h-screen">
 
-  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-64 bg-slate-950 text-slate-300 flex flex-col -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
-    <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
-      <div class="flex items-center gap-3 pb-5 border-b border-slate-800">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-cyan-400 flex items-center justify-center text-white shadow-md shadow-teal-500/20">
-          <i class="fa-solid fa-hand-holding-medical"></i>
-        </div>
-        <div>
-          <h2 class="font-heading font-bold text-sm text-white">CyJ Kinesiología</h2>
-          <p class="text-[10px] text-teal-400 font-medium">Ficha Clínica Digital</p>
-        </div>
+  <!-- MOBILE HEADER -->
+
+  <header class="md:hidden bg-slate-950 text-white px-4 py-4 flex items-center justify-between sticky top-0 z-40">
+
+    <div>
+      <div class="font-bold">
+        CyJ Kinesiología
       </div>
 
-      <nav class="mt-6 space-y-1.5">
-        <button id="nav-dashboard" onclick="switchTab('dashboard')" class="nav-item active w-full flex gap-3 items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold">
-          <i class="fa-solid fa-chart-pie w-5 text-center"></i>Inicio & Métricas
-        </button>
-        <button id="nav-pacientes" onclick="switchTab('pacientes')" class="nav-item w-full flex gap-3 items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
-          <i class="fa-solid fa-id-card w-5 text-center"></i>Pacientes & RUT
-        </button>
-        <button id="nav-atencion" onclick="switchTab('atencion')" class="nav-item w-full flex gap-3 items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
-          <i class="fa-solid fa-circle-plus w-5 text-center"></i>Nueva Atención
-        </button>
-        <button id="nav-pautas" onclick="switchTab('pautas')" class="nav-item w-full flex gap-3 items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
-          <i class="fa-solid fa-dumbbell w-5 text-center"></i>Pautas de Ejercicio
-        </button>
-        <button id="nav-agenda" onclick="switchTab('agenda')" class="nav-item w-full flex gap-3 items-center px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
-          <i class="fa-regular fa-calendar-check w-5 text-center"></i>Agenda & Citas
-        </button>
-      </nav>
-    </div>
-
-    <div class="p-4 border-t border-slate-800 bg-slate-900/60">
-      <div class="flex items-center justify-between">
-        <div>
-          <p id="currentUserLabel" class="text-xs font-bold text-white truncate">Kinesiologo Cristian</p>
-          <p class="text-[10px] text-slate-400">Sesión Autenticada</p>
-        </div>
-        <button onclick="lockSystem()" class="p-2 text-slate-400 hover:text-white" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+      <div class="text-xs text-slate-400">
+        Panel clínico
       </div>
     </div>
+
+    <button
+      id="mobileMenuButton"
+      class="w-10 h-10 rounded-xl bg-slate-800"
+    >
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+  </header>
+
+
+  <!-- SIDEBAR -->
+
+  <aside
+    id="sidebar"
+    class="desktop-sidebar fixed left-0 top-0 bottom-0 w-64 bg-slate-950 text-white z-50 flex flex-col"
+  >
+
+    <div class="p-6 border-b border-slate-800">
+
+      <div class="flex items-center gap-3">
+
+        <div
+          class="w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center"
+        >
+          <i class="fa-solid fa-heart-pulse text-xl"></i>
+        </div>
+
+        <div>
+          <div class="font-bold">
+            CyJ Kinesiología
+          </div>
+
+          <div class="text-xs text-slate-400">
+            Panel clínico
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+
+      <button
+        class="tab-btn active w-full text-left px-4 py-3 rounded-xl flex items-center gap-3"
+        data-tab="dashboard"
+      >
+        <i class="fa-solid fa-chart-line w-5"></i>
+        Dashboard
+      </button>
+
+      <button
+        class="tab-btn w-full text-left px-4 py-3 rounded-xl flex items-center gap-3"
+        data-tab="pacientes"
+      >
+        <i class="fa-solid fa-users w-5"></i>
+        Pacientes & RUT
+      </button>
+
+      <button
+        class="tab-btn w-full text-left px-4 py-3 rounded-xl flex items-center gap-3"
+        data-tab="atencion"
+      >
+        <i class="fa-solid fa-notes-medical w-5"></i>
+        Nueva Atención
+      </button>
+
+      <button
+        class="tab-btn w-full text-left px-4 py-3 rounded-xl flex items-center gap-3"
+        data-tab="agenda"
+      >
+        <i class="fa-solid fa-calendar-days w-5"></i>
+        Agenda & Citas
+      </button>
+
+      <button
+        class="tab-btn w-full text-left px-4 py-3 rounded-xl flex items-center gap-3"
+        data-tab="ejercicios"
+      >
+        <i class="fa-solid fa-dumbbell w-5"></i>
+        Pautas de Ejercicio
+      </button>
+
+    </nav>
+
+
+    <div class="p-4 border-t border-slate-800">
+
+      <button
+        id="logoutButton"
+        class="w-full px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 flex items-center gap-3"
+      >
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Cerrar sesión
+      </button>
+
+    </div>
+
   </aside>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="flex-1 min-w-0 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-200">
+
+  <!-- MAIN -->
+
+  <main class="md:ml-64 min-h-screen">
+
+    <!-- TOP BAR -->
+
+    <header
+      class="hidden md:flex h-20 bg-white border-b border-slate-200 items-center justify-between px-8 sticky top-0 z-30"
+    >
+
       <div>
-        <h1 id="currentTabTitle" class="font-heading font-bold text-xl sm:text-2xl text-slate-900">Inicio & Métricas</h1>
-        <p id="currentTabSubtitle" class="text-xs sm:text-sm text-slate-500">Seguimiento clínico y gestión de pacientes.</p>
-      </div>
-      <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition flex items-center gap-2">
-        <i class="fa-solid fa-user-plus"></i>
-        <span>+ Nuevo Paciente</span>
-      </button>
-    </div>
+        <h1 id="pageTitle" class="text-xl font-bold text-slate-800">
+          Dashboard
+        </h1>
 
-    <section id="tab-dashboard" class="tab-content space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-xl flex items-center justify-center text-xl font-bold">
-            <i class="fa-solid fa-users"></i>
-          </div>
-          <div>
-            <p class="text-[11px] font-bold text-slate-500 uppercase">Pacientes</p>
-            <p id="statTotalPatients" class="text-2xl font-heading font-bold text-slate-900">0</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 bg-cyan-100 text-cyan-700 rounded-xl flex items-center justify-center text-xl font-bold">
-            <i class="fa-solid fa-stethoscope"></i>
-          </div>
-          <div>
-            <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones Totales</p>
-            <p id="statTotalAttentions" class="text-2xl font-heading font-bold text-slate-900">0</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center text-xl font-bold">
-            <i class="fa-solid fa-calendar-check"></i>
-          </div>
-          <div>
-            <p class="text-[11px] font-bold text-slate-500 uppercase">Atenciones este Mes</p>
-            <p id="statMonthAttentions" class="text-2xl font-heading font-bold text-teal-700">0</p>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-          <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center text-xl font-bold">
-            <i class="fa-regular fa-clock"></i>
-          </div>
-          <div>
-            <p class="text-[11px] font-bold text-slate-500 uppercase">Próximas Citas</p>
-            <p id="statUpcomingAppointments" class="text-2xl font-heading font-bold text-blue-700">0</p>
-          </div>
-        </div>
+        <p class="text-sm text-slate-500">
+          Gestión clínica CyJ Kinesiología
+        </p>
       </div>
 
-      <div class="grid lg:grid-cols-2 gap-6">
-        <div class="bg-gradient-to-br from-slate-950 to-teal-950 text-white rounded-3xl p-6 shadow-xl space-y-3">
-          <span class="inline-flex px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-[10px] font-bold uppercase tracking-widest">
-            Control Kinésico Pro
-          </span>
-          <h2 class="font-heading font-bold text-xl sm:text-2xl">¡Bienvenido, Kinesiologo Cristian!</h2>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Plataforma clínica protegida por Supabase Auth para el registro de evolución, medición objetiva de dolor EVA, prescripción de pautas y agenda de citas.
+      <div class="flex items-center gap-3">
+
+        <div
+          id="connectionStatus"
+          class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-sm"
+        >
+          <i class="fa-solid fa-circle text-[8px] mr-1"></i>
+          Conectado
+        </div>
+
+        <div
+          id="userEmail"
+          class="text-sm text-slate-500"
+        ></div>
+
+      </div>
+
+    </header>
+
+
+    <div class="p-4 md:p-8">
+
+
+      <!-- ======================================================
+           DASHBOARD
+      ====================================================== -->
+
+      <section id="tab-dashboard" class="tab-view">
+
+        <div class="mb-8">
+
+          <h2 class="text-2xl font-bold text-slate-800">
+            Resumen clínico
+          </h2>
+
+          <p class="text-slate-500 mt-1">
+            Información general de la actividad clínica.
           </p>
+
         </div>
 
-        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-heading font-bold text-base text-slate-900">Próximas Citas Agendadas</h3>
-            <button onclick="switchTab('agenda')" class="text-xs font-bold text-teal-700 hover:underline">Ir a Agenda →</button>
-          </div>
-          <div id="dashboardUpcoming" class="space-y-2">
-            <p class="text-xs text-slate-400">Cargando la agenda del día...</p>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section id="tab-pacientes" class="tab-content hidden space-y-6">
-      <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-col sm:flex-row gap-3">
-          <div class="relative flex-1">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-            <input id="patientListSearch" oninput="filterPatientTable()" placeholder="Buscar por Nombre o RUT (Ej: 12.345.678-9)..."
-              class="input pl-10">
-          </div>
-          <button onclick="openNewPatientModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2">
-            <i class="fa-solid fa-user-plus"></i>
-            <span>+ Nuevo Paciente</span>
-          </button>
-        </div>
-        <div id="patientsGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 pt-2"></div>
-      </div>
+        <!-- METRICS -->
 
-      <!-- DETALLE PACIENTE & EVOLUCIÓN EVA -->
-      <div id="patientChartDetail" class="hidden bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-lg space-y-4">
-        <div class="flex items-start justify-between pb-3 border-b border-slate-200">
-          <div>
-            <h3 id="detailPatientName" class="font-heading font-bold text-lg text-slate-900"></h3>
-            <div class="flex items-center gap-3 mt-0.5">
-              <span id="detailPatientRut" class="text-xs text-slate-500 font-mono"></span>
-              <span id="detailPatientAge" class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold"></span>
-            </div>
-          </div>
-          <button onclick="closePatientChartDetail()" class="text-slate-400 hover:text-slate-700 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-        </div>
-        <div class="grid lg:grid-cols-2 gap-6">
-          <div>
-            <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Evolución Escala del Dolor (EVA Final)</h4>
-            <div class="h-64 bg-slate-50 rounded-2xl border border-slate-200 p-3"><canvas id="evaChartCanvas"></canvas></div>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold uppercase text-slate-500 mb-2">Historial de Atenciones</h4>
-            <div id="patientHistoryContainer" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-1"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
 
-    <section id="tab-atencion" class="tab-content hidden">
-      <div class="max-w-3xl mx-auto bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm">
-        <div>
-          <h2 class="font-heading font-bold text-lg">Registrar atención kinésica</h2>
-          <p class="text-xs text-slate-500 mt-1">Selecciona el paciente, registra la zona tratada y la escala de dolor EVA.</p>
-        </div>
+          <button
+            id="cardPacientes"
+            class="clickable card-hover text-left bg-white rounded-2xl p-5 border border-slate-200"
+          >
 
-        <form onsubmit="saveAttention(event)" class="mt-6 space-y-4">
-          <!-- BÚSQUEDA / SELECCIÓN DE PACIENTE -->
-          <div>
-            <label class="label">Seleccionar Paciente (RUT o Nombre) *</label>
-            <div class="relative">
-              <input id="attPatientSearch" type="text" oninput="filterAttentionPatients(this.value)" placeholder="Escribe el nombre o RUT del paciente..."
-                class="input font-semibold" autocomplete="off" required>
-              <input type="hidden" id="attPatientRutSelected" required>
-              <div id="attPatientResults" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto custom-scrollbar"></div>
-            </div>
-            <p id="attPatientSelectedLabel" class="text-xs text-teal-700 font-bold mt-1.5 hidden"></p>
-          </div>
+            <div class="flex items-start justify-between">
 
-          <!-- ZONA ANATÓMICA DESPLEGABLE -->
-          <div>
-            <label class="label">Zona Anatómica Tratada *</label>
-            <select id="attZoneSelect" required onchange="handleZoneChange(this.value)" class="input">
-              <option value="">-- Seleccionar Zona Anatómica --</option>
-              <option value="Hombro Izquierdo">Hombro Izquierdo</option>
-              <option value="Hombro Derecho">Hombro Derecho</option>
-              <option value="Rodilla Izquierda">Rodilla Izquierda</option>
-              <option value="Rodilla Derecha">Rodilla Derecha</option>
-              <option value="Columna Cervical">Columna Cervical</option>
-              <option value="Columna Lumbar">Columna Lumbar</option>
-              <option value="Columna Torácica">Columna Torácica</option>
-              <option value="Cadera Izquierda">Cadera Izquierda</option>
-              <option value="Cadera Derecha">Cadera Derecha</option>
-              <option value="Codo / Muñeca Izquierda">Codo / Muñeca Izquierda</option>
-              <option value="Codo / Muñeca Derecha">Codo / Muñeca Derecha</option>
-              <option value="Tobillo / Pie Izquierdo">Tobillo / Pie Izquierdo</option>
-              <option value="Tobillo / Pie Derecho">Tobillo / Pie Derecho</option>
-              <option value="OTRA">Otra Zona (Especificar a continuación)</option>
-            </select>
-            <input id="attZoneCustom" type="text" placeholder="Escribe la zona específica..." class="input mt-2 hidden">
-          </div>
-
-          <!-- EVA INICIAL Y FINAL BOTONERA -->
-          <div class="grid sm:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-200">
-            <div>
-              <div class="flex justify-between items-center mb-1.5">
-                <label class="label mb-0">Dolor EVA Inicial *</label>
-                <span id="evaInicioVal" class="text-xs font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">EVA: -</span>
-              </div>
-              <input type="hidden" id="attEvaInicio" required>
-              <div class="grid grid-cols-11 gap-1" id="evaInicioBtnGroup"></div>
-            </div>
-
-            <div>
-              <div class="flex justify-between items-center mb-1.5">
-                <label class="label mb-0">Dolor EVA Final *</label>
-                <span id="evaFinVal" class="text-xs font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">EVA: -</span>
-              </div>
-              <input type="hidden" id="attEvaFin" required>
-              <div class="grid grid-cols-11 gap-1" id="evaFinBtnGroup"></div>
-            </div>
-          </div>
-
-          <div>
-            <label class="label">Notas de evolución y tratamiento aplicado</label>
-            <textarea id="attNotes" rows="4" class="input" placeholder="Terapia manual, electroterapia, ejercicios, tolerancia del paciente..."></textarea>
-          </div>
-
-          <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm">
-            <i class="fa-solid fa-floppy-disk mr-2"></i>Guardar atención
-          </button>
-        </form>
-      </div>
-    </section>
-
-    <section id="tab-pautas" class="tab-content hidden space-y-6">
-      <div class="grid xl:grid-cols-[1fr_1.2fr] gap-6">
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="font-heading font-bold text-slate-900">Catálogo de Ejercicios</h2>
-              <p class="text-xs text-slate-500 mt-0.5">Selecciona ejercicios para armar la pauta.</p>
-            </div>
-            <button onclick="loadExercises()" class="text-xs font-bold text-teal-700 p-1"><i class="fa-solid fa-rotate"></i></button>
-          </div>
-          <input id="exerciseSearch" oninput="filterExercises()" class="input" placeholder="Buscar por nombre de ejercicio o zona...">
-          <div id="exerciseLibrary" class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
-        </div>
-
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-          <h2 class="font-heading font-bold text-slate-900">Pauta Personalizada para el Hogar</h2>
-
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="label">Paciente Destinatario</label>
-              <select id="pautaPatientSelect" onchange="handlePautaPatientChange(this.value)" class="input">
-                <option value="">-- Seleccionar Paciente --</option>
-              </select>
-            </div>
-            <div>
-              <label class="label">Teléfono WhatsApp</label>
-              <input id="pautaPhone" class="input font-mono" placeholder="56912345678">
-            </div>
-          </div>
-
-          <div id="selectedExercises" class="space-y-2"></div>
-
-          <div>
-            <label class="label">Indicaciones Adicionales / Frecuencia</label>
-            <textarea id="pautaExtra" rows="3" class="input" placeholder="Ej: Realizar 2 veces al día. Aplicar compresa fría al finalizar..."></textarea>
-          </div>
-
-          <div class="grid sm:grid-cols-2 gap-3 pt-2">
-            <button onclick="copyRoutineText()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-xs transition">
-              <i class="fa-regular fa-copy mr-1"></i>Copiar Pauta
-            </button>
-            <button onclick="sendPautaWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-md shadow-emerald-600/30 transition">
-              <i class="fa-brands fa-whatsapp mr-1"></i>Enviar por WhatsApp
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="tab-agenda" class="tab-content hidden space-y-6">
-      <div class="grid xl:grid-cols-[1fr_1.4fr] gap-6">
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-          <h2 class="font-heading font-bold text-slate-900">Agendar Nueva Cita</h2>
-
-          <form onsubmit="saveAppointment(event)" class="space-y-4">
-            <div>
-              <label class="label">Paciente *</label>
-              <select id="apptPatientRut" required class="input"></select>
-            </div>
-            <div class="grid sm:grid-cols-2 gap-4">
               <div>
-                <label class="label">Fecha Cita *</label>
-                <input id="apptDate" type="date" required class="input">
+                <p class="text-sm text-slate-500">
+                  Pacientes Totales
+                </p>
+
+                <p
+                  id="metricPacientes"
+                  class="text-3xl font-bold text-slate-800 mt-2"
+                >
+                  0
+                </p>
               </div>
+
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i class="fa-solid fa-users text-xl"></i>
+              </div>
+
+            </div>
+
+            <p class="text-xs text-teal-700 mt-4">
+              Ver pacientes →
+            </p>
+
+          </button>
+
+
+          <button
+            id="cardAtenciones"
+            class="clickable card-hover text-left bg-white rounded-2xl p-5 border border-slate-200"
+          >
+
+            <div class="flex items-start justify-between">
+
               <div>
-                <label class="label">Hora Cita *</label>
-                <input id="apptTime" type="time" required class="input">
+                <p class="text-sm text-slate-500">
+                  Atenciones Totales
+                </p>
+
+                <p
+                  id="metricAtenciones"
+                  class="text-3xl font-bold text-slate-800 mt-2"
+                >
+                  0
+                </p>
               </div>
+
+              <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <i class="fa-solid fa-notes-medical text-xl"></i>
+              </div>
+
             </div>
-            <div>
-              <label class="label">Estado de la Cita</label>
-              <select id="apptEstado" class="input">
-                <option value="Confirmada">Confirmada</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Realizada">Realizada</option>
-              </select>
+
+            <p class="text-xs text-teal-700 mt-4">
+              Ver historial →
+            </p>
+
+          </button>
+
+
+          <button
+            id="cardMes"
+            class="clickable card-hover text-left bg-white rounded-2xl p-5 border border-slate-200"
+          >
+
+            <div class="flex items-start justify-between">
+
+              <div>
+                <p class="text-sm text-slate-500">
+                  Atenciones del Mes
+                </p>
+
+                <p
+                  id="metricMes"
+                  class="text-3xl font-bold text-slate-800 mt-2"
+                >
+                  0
+                </p>
+              </div>
+
+              <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <i class="fa-solid fa-chart-column text-xl"></i>
+              </div>
+
             </div>
-            <button class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3.5 rounded-xl text-xs shadow-md shadow-teal-600/30 transition">
-              <i class="fa-regular fa-calendar-plus mr-1.5"></i>Guardar y Generar Evento / ICS
-            </button>
-          </form>
+
+            <p class="text-xs text-teal-700 mt-4">
+              Ver gráfico diario →
+            </p>
+
+          </button>
+
+
+          <button
+            id="cardCitas"
+            class="clickable card-hover text-left bg-white rounded-2xl p-5 border border-slate-200"
+          >
+
+            <div class="flex items-start justify-between">
+
+              <div>
+                <p class="text-sm text-slate-500">
+                  Próximas Citas
+                </p>
+
+                <p
+                  id="metricCitas"
+                  class="text-3xl font-bold text-slate-800 mt-2"
+                >
+                  0
+                </p>
+              </div>
+
+              <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                <i class="fa-solid fa-calendar-check text-xl"></i>
+              </div>
+
+            </div>
+
+            <p class="text-xs text-teal-700 mt-4">
+              Ir a agenda →
+            </p>
+
+          </button>
+
         </div>
 
-        <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h2 class="font-heading font-bold text-slate-900">Agenda de Citas</h2>
-            <button onclick="loadAppointments()" class="text-xs font-bold text-teal-700 p-1"><i class="fa-solid fa-rotate"></i></button>
+
+        <!-- NEXT APPOINTMENTS -->
+
+        <div class="bg-white rounded-2xl border border-slate-200">
+
+          <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+
+            <div>
+              <h3 class="font-bold text-slate-800">
+                Próximas Citas
+              </h3>
+
+              <p class="text-xs text-slate-500 mt-1">
+                Solo se muestran citas desde hoy en adelante.
+              </p>
+            </div>
+
+            <button
+              id="dashboardAgendaButton"
+              class="text-sm font-semibold text-teal-700 hover:text-teal-900"
+            >
+              Ver agenda
+            </button>
+
           </div>
-          <div id="appointmentsList" class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-1"></div>
+
+          <div
+            id="dashboardAppointments"
+            class="divide-y divide-slate-100"
+          >
+            <div class="p-8 text-center text-slate-400">
+              Cargando...
+            </div>
+          </div>
+
         </div>
-      </div>
-    </section>
+
+      </section>
+
+
+      <!-- ======================================================
+           PACIENTES
+      ====================================================== -->
+
+      <section id="tab-pacientes" class="tab-view hidden-view">
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+          <div>
+            <h2 class="text-2xl font-bold text-slate-800">
+              Pacientes & RUT
+            </h2>
+
+            <p class="text-slate-500">
+              Gestión de fichas de pacientes.
+            </p>
+          </div>
+
+          <button
+            id="newPatientButton"
+            class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-3 rounded-xl font-semibold"
+          >
+            <i class="fa-solid fa-user-plus mr-2"></i>
+            Nuevo Paciente
+          </button>
+
+        </div>
+
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6">
+
+          <div class="relative">
+
+            <i
+              class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            ></i>
+
+            <input
+              id="patientSearch"
+              type="search"
+              class="w-full border border-slate-300 rounded-xl pl-11 pr-4 py-3"
+              placeholder="Buscar por nombre o RUT..."
+            >
+
+          </div>
+
+        </div>
+
+
+        <div
+          id="patientsList"
+          class="grid grid-cols-1 lg:grid-cols-2 gap-5"
+        >
+
+          <div class="col-span-full text-center p-10 text-slate-400">
+            Cargando pacientes...
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ======================================================
+           NUEVA ATENCION
+      ====================================================== -->
+
+      <section id="tab-atencion" class="tab-view hidden-view">
+
+        <div class="mb-6">
+
+          <h2 class="text-2xl font-bold text-slate-800">
+            Nueva Atención
+          </h2>
+
+          <p class="text-slate-500">
+            Registrar evolución clínica y escala EVA.
+          </p>
+
+        </div>
+
+
+        <div class="max-w-4xl">
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-6">
+
+            <form id="attentionForm" class="space-y-6">
+
+              <!-- PATIENT SEARCH -->
+
+              <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                  Paciente
+                </label>
+
+                <div class="relative">
+
+                  <input
+                    id="attentionPatientSearch"
+                    type="text"
+                    autocomplete="off"
+                    class="w-full border border-slate-300 rounded-xl px-4 py-3"
+                    placeholder="Escriba nombre o RUT..."
+                  >
+
+                  <input
+                    id="attentionPatientRut"
+                    type="hidden"
+                    value=""
+                  >
+
+                  <div
+                    id="attentionPatientResults"
+                    class="hidden absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-64 overflow-y-auto scrollbar"
+                  ></div>
+
+                </div>
+
+                <div
+                  id="selectedPatientBadge"
+                  class="hidden mt-2 p-3 rounded-xl bg-teal-50 border border-teal-100"
+                ></div>
+
+              </div>
+
+
+              <!-- DIAGNOSIS -->
+
+              <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                  Diagnóstico
+                </label>
+
+                <select
+                  id="attentionDiagnosis"
+                  class="w-full border border-slate-300 rounded-xl px-4 py-3"
+                >
+                  <option value="">
+                    Seleccionar diagnóstico
+                  </option>
+                </select>
+
+              </div>
+
+
+              <!-- ZONE -->
+
+              <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                  Zona anatómica / tratada
+                </label>
+
+                <input
+                  id="attentionZone"
+                  type="text"
+                  class="w-full border border-slate-300 rounded-xl px-4 py-3"
+                  placeholder="Ej: Rodilla derecha"
+                >
+
+              </div>
+
+
+              <!-- EVA -->
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="border border-slate-200 rounded-xl p-5">
+
+                  <div class="flex justify-between mb-3">
+
+                    <label class="font-semibold text-slate-700">
+                      EVA inicial
+                    </label>
+
+                    <span
+                      id="evaInicioValue"
+                      class="font-bold text-teal-700"
+                    >
+                      0
+                    </span>
+
+                  </div>
+
+                  <input
+                    id="evaInicio"
+                    class="eva-range w-full"
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value="0"
+                  >
+
+                  <div class="flex justify-between text-xs text-slate-400 mt-2">
+                    <span>Sin dolor</span>
+                    <span>Dolor máximo</span>
+                  </div>
+
+                </div>
+
+
+                <div class="border border-slate-200 rounded-xl p-5">
+
+                  <div class="flex justify-between mb-3">
+
+                    <label class="font-semibold text-slate-700">
+                      EVA final
+                    </label>
+
+                    <span
+                      id="evaFinValue"
+                      class="font-bold text-teal-700"
+                    >
+                      0
+                    </span>
+
+                  </div>
+
+                  <input
+                    id="evaFin"
+                    class="eva-range w-full"
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value="0"
+                  >
+
+                  <div class="flex justify-between text-xs text-slate-400 mt-2">
+                    <span>Sin dolor</span>
+                    <span>Dolor máximo</span>
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <!-- NOTES -->
+
+              <div>
+
+                <label class="block text-sm font-semibold text-slate-700 mb-2">
+                  Notas clínicas
+                </label>
+
+                <textarea
+                  id="attentionNotes"
+                  rows="6"
+                  class="w-full border border-slate-300 rounded-xl px-4 py-3 resize-y"
+                  placeholder="Registrar evolución, procedimientos, observaciones..."
+                ></textarea>
+
+              </div>
+
+
+              <div class="flex flex-col sm:flex-row gap-3">
+
+                <button
+                  id="saveAttentionButton"
+                  type="submit"
+                  disabled
+                  class="flex-1 bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed hover:bg-teal-800 text-white px-5 py-3 rounded-xl font-bold"
+                >
+                  <i class="fa-solid fa-floppy-disk mr-2"></i>
+                  Guardar Atención
+                </button>
+
+                <button
+                  type="button"
+                  id="clearAttentionButton"
+                  class="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Limpiar
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ======================================================
+           AGENDA
+      ====================================================== -->
+
+      <section id="tab-agenda" class="tab-view hidden-view">
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+          <div>
+
+            <h2 class="text-2xl font-bold text-slate-800">
+              Agenda & Citas
+            </h2>
+
+            <p class="text-slate-500">
+              Gestión de próximas atenciones.
+            </p>
+
+          </div>
+
+          <button
+            id="newAppointmentButton"
+            class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-3 rounded-xl font-semibold"
+          >
+            <i class="fa-solid fa-calendar-plus mr-2"></i>
+            Nueva Cita
+          </button>
+
+        </div>
+
+
+        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+
+          <div class="p-5 border-b border-slate-200">
+
+            <div class="flex flex-col md:flex-row gap-3">
+
+              <input
+                id="agendaSearch"
+                type="search"
+                class="flex-1 border border-slate-300 rounded-xl px-4 py-3"
+                placeholder="Buscar paciente..."
+              >
+
+              <input
+                id="agendaDateFilter"
+                type="date"
+                class="border border-slate-300 rounded-xl px-4 py-3"
+              >
+
+              <button
+                id="clearAgendaFilter"
+                class="px-4 py-3 border border-slate-300 rounded-xl hover:bg-slate-50"
+              >
+                Limpiar
+              </button>
+
+            </div>
+
+          </div>
+
+          <div
+            id="appointmentsList"
+            class="divide-y divide-slate-100"
+          >
+            <div class="p-10 text-center text-slate-400">
+              Cargando agenda...
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ======================================================
+           EJERCICIOS
+      ====================================================== -->
+
+      <section id="tab-ejercicios" class="tab-view hidden-view">
+
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+          <div>
+
+            <h2 class="text-2xl font-bold text-slate-800">
+              Pautas de Ejercicio
+            </h2>
+
+            <p class="text-slate-500">
+              Biblioteca clínica de ejercicios.
+            </p>
+
+          </div>
+
+          <button
+            id="newExerciseButton"
+            class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-3 rounded-xl font-semibold"
+          >
+            <i class="fa-solid fa-plus mr-2"></i>
+            Nuevo Ejercicio al Catálogo
+          </button>
+
+        </div>
+
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6">
+
+          <input
+            id="exerciseSearch"
+            type="search"
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+            placeholder="Buscar ejercicio, zona o grupo muscular..."
+          >
+
+        </div>
+
+
+        <div
+          id="exerciseList"
+          class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"
+        >
+          <div class="col-span-full text-center p-10 text-slate-400">
+            Cargando ejercicios...
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
   </main>
+
 </div>
 
-<div id="newPatientModal" class="hidden fixed inset-0 z-[80] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
-  <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4 border border-slate-100">
-    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-      <h2 class="font-heading font-bold text-base text-slate-900">Registrar Nuevo Paciente</h2>
-      <button onclick="closeNewPatientModal()" class="p-1 text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
-    </div>
 
-    <form onsubmit="savePatient(event)" class="space-y-3.5">
-      <div><label class="label">RUT Paciente *</label><input id="patRut" required oninput="handleRutInput(this)" class="input font-mono" placeholder="Ej: 12.345.678-9"></div>
-      <div><label class="label">Nombre Completo *</label><input id="patName" required class="input" placeholder="Ej: Juan Pablo Pérez"></div>
-      
-      <!-- FECHA NACIMIENTO Y EDAD AUTOMÁTICA -->
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="label">Fecha de Nacimiento</label>
-          <input id="patBirthDate" type="date" onchange="calculateAgeFromBirthDate(this.value)" class="input">
-        </div>
-        <div>
-          <label class="label">Edad Calculada</label>
-          <input id="patAgeCalc" type="text" readonly placeholder="0 años" class="input bg-slate-50 font-bold text-teal-800">
-        </div>
+<!-- ============================================================
+     MODAL: PACIENTE
+============================================================ -->
+
+<div
+  id="patientModal"
+  class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4"
+>
+
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto scrollbar">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+
+      <div>
+        <h3
+          id="patientModalTitle"
+          class="text-xl font-bold"
+        >
+          Nuevo Paciente
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Datos básicos del paciente
+        </p>
       </div>
 
-      <div><label class="label">Teléfono Móvil</label><input id="patPhone" class="input font-mono" placeholder="+56912345678"></div>
+      <button
+        data-close-modal="patientModal"
+        class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-500"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
 
-      <!-- SELECCIÓN Y EDICIÓN DE DIAGNÓSTICO -->
+    </div>
+
+
+    <form id="patientForm" class="p-6 space-y-5">
+
       <div>
-        <label class="label">Diagnóstico Kinésico</label>
-        <select id="patDiagSelect" onchange="handleDiagnosisSelection(this.value)" class="input">
-          <option value="">Cargando diagnósticos...</option>
+
+        <label class="block text-sm font-semibold mb-2">
+          RUT *
+        </label>
+
+        <input
+          id="patientRut"
+          type="text"
+          required
+          maxlength="12"
+          autocomplete="off"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="12.345.678-5"
+        >
+
+        <p
+          id="rutValidationMessage"
+          class="text-xs mt-2 min-h-[16px]"
+        ></p>
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Nombre completo *
+        </label>
+
+        <input
+          id="patientName"
+          type="text"
+          required
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="Nombre y apellidos"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Fecha de nacimiento
+        </label>
+
+        <input
+          id="patientBirthDate"
+          type="date"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Teléfono
+        </label>
+
+        <input
+          id="patientPhone"
+          type="tel"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="+56 9 1234 5678"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Diagnóstico
+        </label>
+
+        <select
+          id="patientDiagnosis"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+        >
+          <option value="">
+            Seleccionar diagnóstico
+          </option>
         </select>
+
       </div>
 
-      <div id="customDiagContainer" class="hidden space-y-2 bg-teal-50/50 p-3 rounded-xl border border-teal-100">
-        <input id="patDiagNameCustom" placeholder="Nombre del nuevo diagnóstico..." class="input">
+
+      <div class="flex gap-3 pt-2">
+
+        <button
+          type="button"
+          data-close-modal="patientModal"
+          class="flex-1 border border-slate-300 rounded-xl py-3 font-semibold hover:bg-slate-50"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="savePatientButton"
+          type="submit"
+          class="flex-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl py-3 font-bold"
+        >
+          Guardar Paciente
+        </button>
+
       </div>
 
-      <div>
-        <label class="label">Descripción / Observaciones del Diagnóstico</label>
-        <textarea id="patDiagDesc" rows="2" class="input" placeholder="Detalles clínicos o indicación de derivación..."></textarea>
-      </div>
-
-      <div id="saveDiagOption" class="hidden flex items-center gap-2 pt-1">
-        <input type="checkbox" id="patSaveDiagToCatalog" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500">
-        <label for="patSaveDiagToCatalog" class="text-xs text-slate-600 font-semibold">Guardar en la biblioteca de diagnósticos recurrentes</label>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-        <button type="button" onclick="closeNewPatientModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold hover:bg-slate-200">Cancelar</button>
-        <button type="submit" class="px-5 py-2.5 rounded-xl bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 shadow-md">Guardar Paciente</button>
-      </div>
     </form>
+
   </div>
+
 </div>
 
-<!-- MODAL ACCIONES CITA -->
-<div id="appointmentActionModal" class="hidden fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm items-center justify-center p-4">
-  <div class="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-4">
-    <div class="flex items-start justify-between border-b border-slate-100 pb-3">
+
+<!-- ============================================================
+     MODAL: CITA
+============================================================ -->
+
+<div
+  id="appointmentModal"
+  class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4"
+>
+
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto scrollbar">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+
       <div>
-        <h2 class="font-heading font-bold text-slate-900">Cita Preparada</h2>
-        <p id="appointmentActionSummary" class="text-xs text-slate-500 mt-0.5"></p>
+        <h3 class="text-xl font-bold">
+          Nueva Cita
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Agendar atención para un paciente
+        </p>
       </div>
-      <button onclick="closeAppointmentActionModal()" class="p-1 text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+      <button
+        data-close-modal="appointmentModal"
+        class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-500"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
     </div>
 
-    <div class="grid sm:grid-cols-2 gap-3">
-      <button onclick="downloadCurrentICS()" class="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition">
-        <i class="fa-solid fa-file-arrow-down text-teal-700 text-lg"></i>
-        <span class="block mt-2 text-xs font-bold text-slate-900">Descargar Evento .ICS</span>
-        <span class="block mt-0.5 text-[10px] text-slate-500">Incluye alarmas 24 h y 1 h antes.</span>
-      </button>
 
-      <button onclick="openCurrentGoogleCalendar()" class="p-4 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-100 text-left transition">
-        <i class="fa-brands fa-google text-blue-700 text-lg"></i>
-        <span class="block mt-2 text-xs font-bold text-slate-900">Abrir Google Calendar</span>
-        <span class="block mt-0.5 text-[10px] text-slate-500">Abre plantilla para tu agenda.</span>
-      </button>
+    <form id="appointmentForm" class="p-6 space-y-5">
 
-      <button onclick="sendCurrentReminderWhatsApp()" class="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 text-left transition sm:col-span-2">
-        <i class="fa-brands fa-whatsapp text-emerald-700 text-lg"></i>
-        <span class="block mt-2 text-xs font-bold text-slate-900">Enviar Recordatorio por WhatsApp</span>
-        <span class="block mt-0.5 text-[10px] text-slate-500">Redacta mensaje con fecha, hora y enlace.</span>
-      </button>
-    </div>
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Paciente *
+        </label>
+
+        <select
+          id="appointmentPatient"
+          required
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+        >
+          <option value="">
+            Seleccionar paciente
+          </option>
+        </select>
+
+      </div>
+
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <div>
+
+          <label class="block text-sm font-semibold mb-2">
+            Fecha *
+          </label>
+
+          <input
+            id="appointmentDate"
+            type="date"
+            required
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="block text-sm font-semibold mb-2">
+            Hora *
+          </label>
+
+          <input
+            id="appointmentTime"
+            type="time"
+            required
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Estado
+        </label>
+
+        <select
+          id="appointmentStatus"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+        >
+          <option value="agendada">
+            Agendada
+          </option>
+
+          <option value="confirmada">
+            Confirmada
+          </option>
+        </select>
+
+      </div>
+
+
+      <div class="bg-teal-50 border border-teal-100 rounded-xl p-4">
+
+        <div class="flex gap-3">
+
+          <i class="fa-solid fa-bell text-teal-700 mt-1"></i>
+
+          <div class="text-sm text-teal-900">
+
+            <p class="font-semibold">
+              Recordatorios de calendario
+            </p>
+
+            <p class="mt-1 text-teal-700">
+              El archivo ICS incluirá automáticamente alarmas
+              24 horas y 1 hora antes de la atención.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="flex gap-3 pt-2">
+
+        <button
+          type="button"
+          data-close-modal="appointmentModal"
+          class="flex-1 border border-slate-300 rounded-xl py-3 font-semibold"
+        >
+          Cancelar
+        </button>
+
+        <button
+          id="saveAppointmentButton"
+          type="submit"
+          class="flex-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl py-3 font-bold"
+        >
+          <i class="fa-solid fa-calendar-check mr-2"></i>
+          Guardar y Generar Evento ICS
+        </button>
+
+      </div>
+
+    </form>
+
   </div>
+
 </div>
+
+
+<!-- ============================================================
+     MODAL: HISTORIAL
+============================================================ -->
+
+<div
+  id="historyModal"
+  class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4"
+>
+
+  <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+
+      <div>
+        <h3 class="text-xl font-bold">
+          Registro Histórico de Atenciones
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Todas las atenciones registradas en el sistema.
+        </p>
+      </div>
+
+      <button
+        data-close-modal="historyModal"
+        class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-500"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+
+    <div
+      id="historyList"
+      class="overflow-y-auto scrollbar p-6"
+    >
+      <div class="text-center text-slate-400 p-8">
+        Cargando historial...
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     MODAL: GRAFICO MENSUAL
+============================================================ -->
+
+<div
+  id="monthChartModal"
+  class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4"
+>
+
+  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+
+      <div>
+
+        <h3 class="text-xl font-bold">
+          Atenciones del Mes
+        </h3>
+
+        <p
+          id="monthChartSubtitle"
+          class="text-sm text-slate-500"
+        ></p>
+
+      </div>
+
+      <button
+        data-close-modal="monthChartModal"
+        class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-500"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+
+    <div class="p-6">
+
+      <div class="relative h-[350px]">
+        <canvas id="monthlyAttentionChart"></canvas>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     MODAL: NUEVO EJERCICIO
+============================================================ -->
+
+<div
+  id="exerciseModal"
+  class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4"
+>
+
+  <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto scrollbar">
+
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+
+      <div>
+        <h3 class="text-xl font-bold">
+          Nuevo Ejercicio al Catálogo
+        </h3>
+
+        <p class="text-sm text-slate-500">
+          Agregar un ejercicio reutilizable para las pautas clínicas.
+        </p>
+      </div>
+
+      <button
+        data-close-modal="exerciseModal"
+        class="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-500"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+
+    <form id="exerciseForm" class="p-6 space-y-5">
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Nombre del ejercicio *
+        </label>
+
+        <input
+          id="exerciseName"
+          type="text"
+          required
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="Ej: Puente de glúteos"
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Zona anatómica / grupo muscular *
+        </label>
+
+        <input
+          id="exerciseZone"
+          type="text"
+          required
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="Ej: Glúteos / columna lumbar"
+        >
+
+      </div>
+
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+        <div>
+
+          <label class="block text-sm font-semibold mb-2">
+            Series
+          </label>
+
+          <input
+            id="exerciseSeries"
+            type="number"
+            min="0"
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+            placeholder="3"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="block text-sm font-semibold mb-2">
+            Repeticiones
+          </label>
+
+          <input
+            id="exerciseReps"
+            type="number"
+            min="0"
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+            placeholder="10"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="block text-sm font-semibold mb-2">
+            Tiempo sostén (seg)
+          </label>
+
+          <input
+            id="exerciseHold"
+            type="number"
+            min="0"
+            class="w-full border border-slate-300 rounded-xl px-4 py-3"
+            placeholder="30"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          URL de video
+        </label>
+
+        <input
+          id="exerciseVideo"
+          type="url"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="https://www.youtube.com/..."
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          URL de recurso / PDF
+        </label>
+
+        <input
+          id="exercisePdf"
+          type="url"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="https://..."
+        >
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-2">
+          Instrucciones técnicas
+        </label>
+
+        <textarea
+          id="exerciseInstructions"
+          rows="5"
+          class="w-full border border-slate-300 rounded-xl px-4 py-3"
+          placeholder="Describa la ejecución, respiración, posición, precauciones..."
+        ></textarea>
+
+      </div>
+
+
+      <div class="flex gap-3 pt-2">
+
+        <button
+          type="button"
+          data-close-modal="exerciseModal"
+          class="flex-1 border border-slate-300 rounded-xl py-3 font-semibold"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          id="saveExerciseButton"
+          class="flex-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl py-3 font-bold"
+        >
+          <i class="fa-solid fa-plus mr-2"></i>
+          Agregar al Catálogo
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ============================================================
+     TOAST
+============================================================ -->
+
+<div
+  id="toastContainer"
+  class="fixed right-4 bottom-4 z-[200] space-y-3 w-[calc(100%-2rem)] max-w-sm"
+></div>
+
 
 <script>
-  /* ============================================================
-     CONFIGURACIÓN & ESTILOS
-     ============================================================ */
-  const DEFAULT_SUPABASE_URL = 'https://khpujhfzbixiwpzusunt.supabase.co';
-  const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_g2DuQccYKSMXvMib32wSfQ_JvniBp8U';
+/* ============================================================
+   CONFIGURACIÓN SUPABASE
+============================================================ */
 
-  const SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || DEFAULT_SUPABASE_URL;
-  const SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || DEFAULT_SUPABASE_ANON_KEY;
+const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY = "TU_SUPABASE_ANON_KEY";
 
-  let supabaseClient = null;
-  let allPatients = [];
-  let allExercises = [];
-  let allDiagnosticos = [];
-  let allAppointments = [];
-  let selectedExercises = [];
-  let evaChartInstance = null;
-  let currentAppointmentPayload = null;
+const { createClient } = window.supabase;
 
-  const CLINIC_NAME = 'CyJ Kinesiología';
-  const PROFESSIONAL_NAME = 'Klgo. Cristian Barrera Pinto';
-  const DEFAULT_APPOINTMENT_DURATION = 60;
+const supabaseClient = createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
-  window.addEventListener('load', async () => {
-    initSupabase();
-    initEvaBtnGroups();
-    setDefaultAppointmentDateTime();
+
+/* ============================================================
+   ESTADO GLOBAL
+============================================================ */
+
+const state = {
+  user: null,
+  patients: [],
+  appointments: [],
+  attentions: [],
+  diagnoses: [],
+  exercises: [],
+  selectedAttentionRut: "",
+  monthlyChart: null
+};
+
+
+/* ============================================================
+   UTILIDADES
+============================================================ */
+
+function escapeHTML(value) {
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+function todayISO() {
+
+  const date = new Date();
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
+function currentMonthStartISO() {
+
+  const date = new Date();
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}-01`;
+}
+
+
+function currentMonthEndISO() {
+
+  const date = new Date();
+
+  const lastDay = new Date(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    0
+  );
+
+  const year = lastDay.getFullYear();
+  const month = String(lastDay.getMonth() + 1).padStart(2, "0");
+  const day = String(lastDay.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+
+function formatDate(dateString) {
+
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(`${dateString}T12:00:00`);
+
+  return date.toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
   });
+}
 
-  function initSupabase() {
-    if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      showToast('Supabase no está configurado correctamente.', 'error');
-      return;
-    }
-    try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      checkAuthSession();
-    } catch (error) {
-      console.error(error);
-      showToast('No se pudo inicializar Supabase.', 'error');
-    }
+
+function formatDateLong(dateString) {
+
+  if (!dateString) {
+    return "";
   }
 
-  async function checkAuthSession() {
-    if (!supabaseClient) return;
-    try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session && session.user) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('currentUserLabel').textContent = session.user.email;
-        loadInitialData();
-      } else {
-        document.getElementById('loginOverlay').classList.remove('hidden');
-      }
-    } catch (err) {
-      console.error('Error verificando sesión Supabase Auth:', err);
-    }
+  const date = new Date(`${dateString}T12:00:00`);
+
+  return date.toLocaleDateString("es-CL", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  });
+}
+
+
+function normalizeRut(value) {
+
+  return String(value || "")
+    .replace(/[^0-9kK]/g, "")
+    .toUpperCase();
+}
+
+
+function formatRut(value) {
+
+  let clean = normalizeRut(value);
+
+  if (!clean) {
+    return "";
   }
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmailInput').value.trim();
-    const password = document.getElementById('loginPinInput').value;
-    const btn = document.getElementById('loginSubmitBtn');
+  const dv = clean.slice(-1);
+  const body = clean.slice(0, -1);
 
-    if (!supabaseClient) {
-      showToast('Error de conexión con el servidor Supabase.', 'error');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
-
-    try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (error) {
-        showToast('Credenciales incorrectas: ' + error.message, 'error');
-      } else if (data && data.session) {
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('currentUserLabel').textContent = data.user.email;
-        showToast('¡Sesión iniciada exitosamente!');
-        await loadInitialData();
-      }
-    } catch (err) {
-      showToast('Error al autenticar: ' + err.message, 'error');
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión en Servidor';
-    }
+  if (!body) {
+    return dv;
   }
 
-  async function lockSystem() {
-    if (supabaseClient) {
-      await supabaseClient.auth.signOut();
-    }
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('loginPinInput').value = '';
-    showToast('Sesión cerrada.');
+  const reversed = body.split("").reverse();
+
+  const groups = [];
+
+  for (let i = 0; i < reversed.length; i += 3) {
+    groups.push(reversed.slice(i, i + 3).reverse().join(""));
   }
 
-  async function loadInitialData() {
-    await Promise.all([
-      loadPatients(),
-      loadExercises(),
-      loadDiagnosticos(),
-      loadAppointments()
-    ]);
-    updateDashboard();
+  return groups.reverse().join(".") + "-" + dv;
+}
+
+
+function validateRut(rut) {
+
+  const clean = normalizeRut(rut);
+
+  if (clean.length < 2) {
+    return false;
   }
 
-  /* ============================================================
-     UI & TOASTS
-     ============================================================ */
-  function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    document.getElementById('toastMessage').textContent = message;
-    document.getElementById('toastIcon').className = type === 'error'
-      ? 'fa-solid fa-circle-exclamation text-red-400 mt-0.5'
-      : 'fa-solid fa-circle-check text-teal-400 mt-0.5';
-    toast.classList.add('show');
-    clearTimeout(window.__toastTimer);
-    window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+  const body = clean.slice(0, -1);
+  const providedDV = clean.slice(-1);
+
+  if (!/^\d+$/.test(body)) {
+    return false;
   }
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('-translate-x-full');
-    document.getElementById('sidebarBackdrop').classList.toggle('hidden');
-  }
+  let sum = 0;
+  let multiplier = 2;
 
-  function closeSidebar() {
-    document.getElementById('sidebar').classList.add('-translate-x-full');
-    document.getElementById('sidebarBackdrop').classList.add('hidden');
-  }
+  for (let i = body.length - 1; i >= 0; i--) {
 
-  function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    sum += Number(body[i]) * multiplier;
 
-    document.getElementById('tab-' + tabId)?.classList.remove('hidden');
-    document.getElementById('nav-' + tabId)?.classList.add('active');
+    multiplier++;
 
-    const meta = {
-      dashboard: ['Inicio & Métricas', 'Seguimiento clínico y gestión de pacientes.'],
-      pacientes: ['Pacientes & RUT', 'Búsqueda, ficha y evolución EVA.'],
-      atencion: ['Nueva Atención Kinésica', 'Registro clínico de evolución y dolor.'],
-      pautas: ['Pautas de Ejercicio', 'Biblioteca y envío asistido de pautas.'],
-      agenda: ['Agenda & Citas', 'Citas, Google Calendar, ICS y recordatorios.']
-    };
-
-    document.getElementById('currentTabTitle').textContent = meta[tabId]?.[0] || 'Panel Clínico';
-    document.getElementById('currentTabSubtitle').textContent = meta[tabId]?.[1] || '';
-    if (window.innerWidth < 768) closeSidebar();
-  }
-
-  function openNewPatientModal() {
-    loadDiagnosticos();
-    document.getElementById('newPatientModal').classList.remove('hidden');
-    document.getElementById('newPatientModal').classList.add('flex');
-  }
-
-  function closeNewPatientModal() {
-    document.getElementById('newPatientModal').classList.add('hidden');
-    document.getElementById('newPatientModal').classList.remove('flex');
-  }
-
-  function closeAppointmentActionModal() {
-    document.getElementById('appointmentActionModal').classList.add('hidden');
-    document.getElementById('appointmentActionModal').classList.remove('flex');
-  }
-
-  /* ============================================================
-     BOTONERA EVA INTERACTIVA (0-10)
-     ============================================================ */
-  function initEvaBtnGroups() {
-    const inicioContainer = document.getElementById('evaInicioBtnGroup');
-    const finContainer = document.getElementById('evaFinBtnGroup');
-    if (!inicioContainer || !finContainer) return;
-    inicioContainer.innerHTML = '';
-    finContainer.innerHTML = '';
-
-    for (let i = 0; i <= 10; i++) {
-      inicioContainer.innerHTML += `<button type="button" onclick="selectEva('inicio', ${i})" id="eva-inicio-${i}" class="eva-btn">${i}</button>`;
-      finContainer.innerHTML += `<button type="button" onclick="selectEva('fin', ${i})" id="eva-fin-${i}" class="eva-btn">${i}</button>`;
+    if (multiplier > 7) {
+      multiplier = 2;
     }
   }
 
-  function selectEva(type, val) {
-    document.querySelectorAll(`[id^="eva-${type}-"]`).forEach(btn => btn.classList.remove('selected'));
-    document.getElementById(`eva-${type}-${val}`)?.classList.add('selected');
-    if (type === 'inicio') {
-      document.getElementById('attEvaInicio').value = val;
-      document.getElementById('evaInicioVal').textContent = `EVA: ${val}`;
-    } else {
-      document.getElementById('attEvaFin').value = val;
-      document.getElementById('evaFinVal').textContent = `EVA: ${val}`;
-    }
+  const remainder = sum % 11;
+  const calculated = 11 - remainder;
+
+  let expectedDV;
+
+  if (calculated === 11) {
+    expectedDV = "0";
+  } else if (calculated === 10) {
+    expectedDV = "K";
+  } else {
+    expectedDV = String(calculated);
   }
 
-  /* ============================================================
-     RUT CHILENO
-     ============================================================ */
-  function formatChileanRut(value) {
-    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    if (clean.length < 2) return clean;
-    const dv = clean.slice(-1);
-    const body = clean.slice(0, -1);
-    return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+  return expectedDV === providedDV;
+}
+
+
+function safeURL(url) {
+
+  if (!url) {
+    return null;
   }
 
-  function validateChileanRut(value) {
-    const clean = String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    if (clean.length < 2) return false;
-    const dv = clean.slice(-1);
-    const body = clean.slice(0, -1);
-    if (!/^\d+$/.test(body)) return false;
+  try {
 
-    let sum = 0, multiplier = 2;
-    for (let i = body.length - 1; i >= 0; i--) {
-      sum += Number(body[i]) * multiplier;
-      multiplier = multiplier === 7 ? 2 : multiplier + 1;
-    }
-    const expected = 11 - (sum % 11);
-    const expectedDv = expected === 11 ? '0' : expected === 10 ? 'K' : String(expected);
-    return dv === expectedDv;
-  }
+    const parsed = new URL(url);
 
-  function handleRutInput(el) {
-    el.value = formatChileanRut(el.value);
-  }
-
-  /* ============================================================
-     FECHA DE NACIMIENTO Y DIAGNÓSTICOS
-     ============================================================ */
-  function calculateAgeFromBirthDate(dateStr) {
-    if (!dateStr) {
-      document.getElementById('patAgeCalc').value = '';
+    if (
+      parsed.protocol !== "http:" &&
+      parsed.protocol !== "https:"
+    ) {
       return null;
     }
-    const birth = new Date(dateStr);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    document.getElementById('patAgeCalc').value = age >= 0 ? `${age} años` : '0 años';
-    return age;
+
+    return parsed.href;
+
+  } catch {
+    return null;
+  }
+}
+
+
+function showToast(message, type = "success") {
+
+  const container = document.getElementById("toastContainer");
+
+  const toast = document.createElement("div");
+
+  let classes =
+    "toast rounded-xl shadow-xl px-4 py-3 flex items-start gap-3 border ";
+
+  if (type === "error") {
+
+    classes +=
+      "bg-red-50 border-red-200 text-red-800";
+
+  } else if (type === "warning") {
+
+    classes +=
+      "bg-amber-50 border-amber-200 text-amber-800";
+
+  } else {
+
+    classes +=
+      "bg-emerald-50 border-emerald-200 text-emerald-800";
   }
 
-  async function loadDiagnosticos() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('diagnosticos').select('*').order('nombre');
-    allDiagnosticos = data || [];
-    populateDiagnosisSelect();
+  toast.className = classes;
+
+  const icon =
+    type === "error"
+      ? "fa-circle-exclamation"
+      : type === "warning"
+        ? "fa-triangle-exclamation"
+        : "fa-circle-check";
+
+  toast.innerHTML = `
+    <i class="fa-solid ${icon} mt-0.5"></i>
+    <div class="text-sm font-medium flex-1">
+      ${escapeHTML(message)}
+    </div>
+    <button class="opacity-60 hover:opacity-100">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  `;
+
+  toast.querySelector("button").addEventListener(
+    "click",
+    () => toast.remove()
+  );
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+  }, 5000);
+}
+
+
+function setButtonLoading(button, loading, text = null) {
+
+  if (!button) {
+    return;
   }
 
-  function populateDiagnosisSelect() {
-    const select = document.getElementById('patDiagSelect');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Seleccionar Diagnóstico --</option>' +
-      allDiagnosticos.map(d => `<option value="${escapeAttr(d.nombre)}">${escapeHtml(d.nombre)}</option>`).join('') +
-      '<option value="OTRO_MANUAL">+ Agregar Nuevo Diagnóstico / Manual</option>';
-  }
+  if (loading) {
 
-  function handleDiagnosisSelection(val) {
-    const customContainer = document.getElementById('customDiagContainer');
-    const saveOption = document.getElementById('saveDiagOption');
-    const descTextarea = document.getElementById('patDiagDesc');
+    button.dataset.originalText = button.innerHTML;
 
-    if (val === 'OTRO_MANUAL') {
-      customContainer?.classList.remove('hidden');
-      saveOption?.classList.remove('hidden');
-      if (descTextarea) descTextarea.value = '';
-    } else {
-      customContainer?.classList.add('hidden');
-      saveOption?.classList.add('hidden');
-      const found = allDiagnosticos.find(d => d.nombre === val);
-      if (descTextarea) descTextarea.value = found ? (found.descripcion || '') : '';
+    button.disabled = true;
+
+    button.innerHTML = `
+      <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+      ${text || "Procesando..."}
+    `;
+
+  } else {
+
+    button.disabled = false;
+
+    if (button.dataset.originalText) {
+      button.innerHTML = button.dataset.originalText;
     }
   }
+}
 
-  /* ============================================================
-     BÚSQUEDA Y SELECCIÓN DE PACIENTES PARA ATENCIÓN
-     ============================================================ */
-  function filterAttentionPatients(query) {
-    const resultsBox = document.getElementById('attPatientResults');
-    if (!resultsBox) return;
-    const q = query.toLowerCase().trim();
-    if (!q) {
-      resultsBox.classList.add('hidden');
-      return;
-    }
-    const filtered = allPatients.filter(p => p.nombre.toLowerCase().includes(q) || p.rut.toLowerCase().includes(q));
-    if (!filtered.length) {
-      resultsBox.innerHTML = '<div class="p-3 text-xs text-slate-400">No se encontraron pacientes.</div>';
-    } else {
-      resultsBox.innerHTML = filtered.map(p => `
-        <div onclick="selectPatientForAttention(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)})" class="p-3 hover:bg-teal-50 cursor-pointer border-b border-slate-100 text-xs">
-          <p class="font-bold text-slate-900">${escapeHtml(p.nombre)}</p>
-          <p class="text-slate-500 font-mono">${escapeHtml(p.rut)}</p>
-        </div>
-      `).join('');
-    }
-    resultsBox.classList.remove('hidden');
+
+/* ============================================================
+   NAVEGACIÓN
+============================================================ */
+
+function openTab(tabName) {
+
+  document.querySelectorAll(".tab-view").forEach(section => {
+    section.classList.add("hidden-view");
+  });
+
+  const target = document.getElementById(`tab-${tabName}`);
+
+  if (target) {
+    target.classList.remove("hidden-view");
   }
 
-  function selectPatientForAttention(rut, nombre) {
-    document.getElementById('attPatientSearch').value = `${nombre} (${rut})`;
-    document.getElementById('attPatientRutSelected').value = rut;
-    document.getElementById('attPatientResults')?.classList.add('hidden');
-    document.getElementById('attPatientSelectedLabel').textContent = `✓ Seleccionado: ${nombre} [${rut}]`;
-    document.getElementById('attPatientSelectedLabel')?.classList.remove('hidden');
-  }
+  document.querySelectorAll(".tab-btn").forEach(button => {
 
-  function handleZoneChange(val) {
-    const customInput = document.getElementById('attZoneCustom');
-    if (!customInput) return;
-    if (val === 'OTRA') {
-      customInput.classList.remove('hidden');
-      customInput.required = true;
-    } else {
-      customInput.classList.add('hidden');
-      customInput.required = false;
-    }
-  }
-
-  /* ============================================================
-     PACIENTES
-     ============================================================ */
-  async function savePatient(e) {
-    e.preventDefault();
-    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
-
-    const rut = formatChileanRut(document.getElementById('patRut').value.trim());
-    const nombre = document.getElementById('patName').value.trim();
-    const fecha_nacimiento = document.getElementById('patBirthDate').value || null;
-    const telefono = document.getElementById('patPhone').value.trim();
-
-    const selectedDiagOption = document.getElementById('patDiagSelect').value;
-    const customDiagName = document.getElementById('patDiagNameCustom')?.value.trim();
-    const diagDesc = document.getElementById('patDiagDesc')?.value.trim();
-
-    let finalDiagName = selectedDiagOption === 'OTRO_MANUAL' ? customDiagName : selectedDiagOption;
-    if (!finalDiagName && diagDesc) finalDiagName = diagDesc;
-
-    if (!validateChileanRut(rut)) {
-      showToast(`Atención: El RUT "${rut}" no parece coincidir con Módulo 11.`, 'error');
-    }
-
-    if (selectedDiagOption === 'OTRO_MANUAL' && customDiagName && document.getElementById('patSaveDiagToCatalog')?.checked) {
-      await supabaseClient.from('diagnosticos').insert([{ nombre: customDiagName, descripcion: diagDesc }]);
-      await loadDiagnosticos();
-    }
-
-    const { error } = await supabaseClient.from('pacientes').insert([{
-      rut, nombre, telefono, diagnostico: finalDiagName, fecha_nacimiento
-    }]);
-
-    if (error) {
-      showToast('No se pudo guardar: ' + error.message, 'error');
-      return;
-    }
-
-    closeNewPatientModal();
-    showToast('Paciente guardado correctamente.');
-    await loadPatients();
-  }
-
-  async function loadPatients() {
-    if (!supabaseClient) return;
-    const { data, error } = await supabaseClient
-      .from('pacientes')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(error);
-      showToast('No se pudieron cargar los pacientes.', 'error');
-      return;
-    }
-
-    allPatients = data || [];
-    document.getElementById('statTotalPatients').textContent = allPatients.length;
-    renderPatientsGrid(allPatients);
-    populatePautaPatientSelect();
-    populateAppointmentPatients();
-    updateDashboard();
-  }
-
-  function renderPatientsGrid(list) {
-    const grid = document.getElementById('patientsGrid');
-    if (!list.length) {
-      grid.innerHTML = `<div class="col-span-full p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">No hay pacientes que coincidan.</div>`;
-      return;
-    }
-
-    grid.innerHTML = list.map(p => {
-      let ageText = '';
-      if (p.fecha_nacimiento) {
-        const b = new Date(p.fecha_nacimiento);
-        const t = new Date();
-        let age = t.getFullYear() - b.getFullYear();
-        if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) age--;
-        if (age >= 0) ageText = `${age} años`;
-      }
-
-      return `
-        <article class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3 hover:border-teal-500 transition">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-bold text-sm text-slate-900">${escapeHtml(p.nombre)}</h3>
-              <div class="flex items-center gap-2 mt-0.5">
-                <span class="text-xs text-slate-500 font-mono">${escapeHtml(p.rut)}</span>
-                ${ageText ? `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-semibold">${ageText}</span>` : ''}
-              </div>
-            </div>
-            <span class="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-[10px] font-bold">Activo</span>
-          </div>
-          <p class="text-xs text-slate-600 line-clamp-2">
-            <i class="fa-solid fa-stethoscope text-teal-600 mr-1"></i>${escapeHtml(p.diagnostico || 'Sin diagnóstico')}
-          </p>
-          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
-            <button onclick="viewPatientDetail(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)}, ${JSON.stringify(ageText)})" class="py-2 rounded-xl bg-slate-100 hover:bg-teal-50 text-slate-700 hover:text-teal-700 text-[11px] font-bold transition">
-              <i class="fa-solid fa-chart-line mr-1"></i>Evolución
-            </button>
-            <button onclick="selectPatientForAttention(${JSON.stringify(p.rut)}, ${JSON.stringify(p.nombre)})" class="py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold transition">
-              <i class="fa-solid fa-circle-plus mr-1"></i>Atención
-            </button>
-          </div>
-        </article>
-      `;
-    }).join('');
-  }
-
-  function filterPatientTable() {
-    const q = document.getElementById('patientListSearch').value.trim().toLowerCase();
-    renderPatientsGrid(allPatients.filter(p =>
-      String(p.nombre || '').toLowerCase().includes(q) ||
-      String(p.rut || '').toLowerCase().includes(q)
-    ));
-  }
-
-  async function viewPatientDetail(rut, nombre, edad = '') {
-    document.getElementById('patientChartDetail').classList.remove('hidden');
-    document.getElementById('detailPatientName').textContent = nombre;
-    document.getElementById('detailPatientRut').textContent = 'RUT: ' + rut;
-    document.getElementById('detailPatientAge').textContent = edad;
-
-    const { data, error } = await supabaseClient
-      .from('atenciones')
-      .select('*')
-      .eq('rut_paciente', rut)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      showToast('No se pudo cargar la evolución.', 'error');
-      return;
-    }
-
-    const history = document.getElementById('patientHistoryContainer');
-    if (!data?.length) {
-      history.innerHTML = '<p class="text-xs text-slate-400">Sin atenciones registradas.</p>';
-      renderEvaChart([], []);
-      return;
-    }
-
-    history.innerHTML = data.map((a, i) => `
-      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-        <div class="flex justify-between gap-3">
-          <div>
-            <p class="text-xs font-bold text-slate-800">Sesión #${a.sesion_num || i + 1} · ${escapeHtml(a.zona || '')}</p>
-            <p class="text-[10px] text-slate-500 mt-0.5">${formatDateTime(a.created_at)}</p>
-          </div>
-          <strong class="text-xs font-bold text-teal-700">EVA ${a.eva_inicio} → ${a.eva_fin}</strong>
-        </div>
-        ${a.notas ? `<p class="mt-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">${escapeHtml(a.notas)}</p>` : ''}
-      </div>
-    `).join('');
-
-    renderEvaChart(
-      data.map((a, i) => 'Sesión ' + (a.sesion_num || i + 1)),
-      data.map(a => Number(a.eva_fin))
+    button.classList.toggle(
+      "active",
+      button.dataset.tab === tabName
     );
+
+  });
+
+  const titles = {
+    dashboard: "Dashboard",
+    pacientes: "Pacientes & RUT",
+    atencion: "Nueva Atención",
+    agenda: "Agenda & Citas",
+    ejercicios: "Pautas de Ejercicio"
+  };
+
+  document.getElementById("pageTitle").textContent =
+    titles[tabName] || "CyJ Kinesiología";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+/* ============================================================
+   AUTENTICACIÓN
+============================================================ */
+
+async function checkSession() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient.auth.getSession();
+
+  if (error) {
+
+    console.error(error);
+
+    showAuth();
+
+    return;
   }
 
-  function closePatientChartDetail() {
-    document.getElementById('patientChartDetail').classList.add('hidden');
+  if (data.session) {
+
+    state.user = data.session.user;
+
+    showApplication();
+
+  } else {
+
+    showAuth();
+  }
+}
+
+
+function showAuth() {
+
+  document
+    .getElementById("authView")
+    .classList.remove("hidden-view");
+
+  document
+    .getElementById("appView")
+    .classList.add("hidden-view");
+}
+
+
+async function showApplication() {
+
+  document
+    .getElementById("authView")
+    .classList.add("hidden-view");
+
+  document
+    .getElementById("appView")
+    .classList.remove("hidden-view");
+
+  document.getElementById("userEmail").textContent =
+    state.user?.email || "";
+
+  await initializeApplication();
+}
+
+
+async function login(email, password) {
+
+  const loginButton =
+    document.getElementById("loginButton");
+
+  const errorBox =
+    document.getElementById("loginError");
+
+  errorBox.classList.add("hidden");
+
+  setButtonLoading(
+    loginButton,
+    true,
+    "Ingresando..."
+  );
+
+  const {
+    data,
+    error
+  } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  setButtonLoading(loginButton, false);
+
+  if (error) {
+
+    console.error(error);
+
+    errorBox.textContent =
+      "No fue posible iniciar sesión. Verifique sus credenciales.";
+
+    errorBox.classList.remove("hidden");
+
+    return;
   }
 
-  function renderEvaChart(labels, values) {
-    const ctx = document.getElementById('evaChartCanvas').getContext('2d');
-    if (evaChartInstance) evaChartInstance.destroy();
+  state.user = data.user;
 
-    evaChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels.length ? labels : ['Sin datos'],
-        datasets: [{
-          label: 'EVA final',
-          data: values.length ? values : [0],
-          borderColor: '#0d9488',
-          backgroundColor: 'rgba(13,148,136,.15)',
-          fill: true,
-          tension: .3,
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: { y: { min: 0, max: 10, ticks: { stepSize: 1 } } }
+  showApplication();
+}
+
+
+async function logout() {
+
+  await supabaseClient.auth.signOut();
+
+  state.user = null;
+
+  showAuth();
+}
+
+
+/* ============================================================
+   SUPABASE AUTH STATE
+============================================================ */
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+
+    if (event === "SIGNED_OUT") {
+
+      state.user = null;
+
+      showAuth();
+
+      return;
+    }
+
+    if (
+      event === "SIGNED_IN" ||
+      event === "TOKEN_REFRESHED"
+    ) {
+
+      if (session?.user) {
+
+        state.user = session.user;
+
+        if (
+          document
+            .getElementById("appView")
+            .classList.contains("hidden-view")
+        ) {
+
+          await showApplication();
+        }
       }
+    }
+  }
+);
+
+
+/* ============================================================
+   PACIENTES
+============================================================ */
+
+async function loadPatients() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("pacientes")
+    .select("*")
+    .order("nombre", {
+      ascending: true
+    });
+
+  if (error) {
+
+    console.error("loadPatients:", error);
+
+    showToast(
+      "No se pudieron cargar los pacientes.",
+      "error"
+    );
+
+    return;
+  }
+
+  state.patients = data || [];
+
+  renderPatients();
+
+  populatePatientSelects();
+}
+
+
+function renderPatients() {
+
+  const container =
+    document.getElementById("patientsList");
+
+  const search =
+    document
+      .getElementById("patientSearch")
+      .value
+      .trim()
+      .toLowerCase();
+
+  let patients = state.patients;
+
+  if (search) {
+
+    patients = patients.filter(patient => {
+
+      return (
+        String(patient.nombre || "")
+          .toLowerCase()
+          .includes(search) ||
+
+        String(patient.rut || "")
+          .toLowerCase()
+          .includes(search)
+      );
     });
   }
 
-  async function saveAttention(e) {
-    e.preventDefault();
-    if (!supabaseClient) return showToast('Supabase no está configurado.', 'error');
+  if (!patients.length) {
 
-    const rut_paciente = document.getElementById('attPatientRutSelected')?.value;
-    if (!rut_paciente) return showToast('Por favor selecciona un paciente de la lista.', 'error');
-
-    const zoneSelect = document.getElementById('attZoneSelect')?.value;
-    const zoneCustom = document.getElementById('attZoneCustom')?.value.trim();
-    const zona = zoneSelect === 'OTRA' ? zoneCustom : zoneSelect;
-
-    const eva_inicio = Number(document.getElementById('attEvaInicio').value);
-    const eva_fin = Number(document.getElementById('attEvaFin').value);
-    const notas = document.getElementById('attNotes').value.trim();
-
-    if (isNaN(eva_inicio) || isNaN(eva_fin)) return showToast('Selecciona el dolor EVA inicial y final.', 'error');
-
-    const { count, error: countError } = await supabaseClient
-      .from('atenciones')
-      .select('*', { count: 'exact', head: true })
-      .eq('rut_paciente', rut_paciente);
-
-    if (countError) {
-      showToast('No se pudo calcular el número de sesión.', 'error');
-      return;
-    }
-
-    const sesion_num = (count || 0) + 1;
-    const { error } = await supabaseClient.from('atenciones').insert([{
-      rut_paciente, zona, eva_inicio, eva_fin, notas, sesion_num
-    }]);
-
-    if (error) {
-      showToast('Error al guardar atención: ' + error.message, 'error');
-      return;
-    }
-
-    showToast(`Atención registrada exitosamente (Sesión #${sesion_num}).`);
-    document.getElementById('attPatientSearch').value = '';
-    document.getElementById('attPatientRutSelected').value = '';
-    document.getElementById('attPatientSelectedLabel')?.classList.add('hidden');
-    document.getElementById('attNotes').value = '';
-    await loadPatients();
-  }
-
-  /* ============================================================
-     EJERCICIOS / PAUTAS
-     ============================================================ */
-  async function loadExercises() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('ejercicios').select('*').order('nombre');
-    allExercises = data || [];
-    renderExerciseLibrary(allExercises);
-  }
-
-  function renderExerciseLibrary(list) {
-    const box = document.getElementById('exerciseLibrary');
-    if (!list.length) {
-      box.innerHTML = '<p class="text-xs text-slate-400">No hay ejercicios registrados en la biblioteca.</p>';
-      return;
-    }
-    box.innerHTML = list.map(ex => `
-      <div class="p-3 border border-slate-200 rounded-2xl flex justify-between items-center bg-slate-50">
-        <div>
-          <p class="font-bold text-xs text-slate-900">${escapeHtml(ex.nombre)}</p>
-          <p class="text-[10px] text-slate-500">${escapeHtml(ex.zona || 'General')} · ${ex.series || '3'} series x ${ex.repeticiones || '12'} reps</p>
-        </div>
-        <button onclick="addExerciseToRoutine(${JSON.stringify(ex.id)})" class="px-3 py-1.5 bg-teal-600 text-white rounded-xl text-[10px] font-bold hover:bg-teal-700">
-          + Añadir
-        </button>
+    container.innerHTML = `
+      <div class="col-span-full bg-white rounded-2xl border border-slate-200 p-10 text-center">
+        <i class="fa-solid fa-user-slash text-3xl text-slate-300"></i>
+        <p class="font-semibold text-slate-600 mt-3">
+          No se encontraron pacientes.
+        </p>
       </div>
-    `).join('');
+    `;
+
+    return;
   }
 
-  function filterExercises() {
-    const q = document.getElementById('exerciseSearch').value.toLowerCase();
-    renderExerciseLibrary(allExercises.filter(ex =>
-      String(ex.nombre || '').toLowerCase().includes(q) ||
-      String(ex.zona || '').toLowerCase().includes(q)
-    ));
-  }
+  container.innerHTML = patients.map(patient => {
 
-  function populatePautaPatientSelect() {
-    const select = document.getElementById('pautaPatientSelect');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Seleccionar Paciente --</option>' +
-      allPatients.map(p => `<option value="${escapeAttr(p.rut)}">${escapeHtml(p.nombre)}</option>`).join('');
-  }
+    const rut = patient.rut || "";
 
-  function handlePautaPatientChange(rut) {
-    const patient = allPatients.find(p => p.rut === rut);
-    if (patient) {
-      document.getElementById('pautaPhone').value = normalizePhone(patient.telefono || '');
-    }
-  }
+    return `
+      <article
+        class="bg-white rounded-2xl border border-slate-200 p-5 card-hover"
+      >
 
-  function addExerciseToRoutine(id) {
-    const ex = allExercises.find(e => e.id === id);
-    if (ex) {
-      selectedExercises.push(ex);
-      renderSelectedExercises();
-    }
-  }
+        <div class="flex justify-between gap-4">
 
-  function renderSelectedExercises() {
-    const box = document.getElementById('selectedExercises');
-    if (!selectedExercises.length) {
-      box.innerHTML = '<div class="p-4 border border-dashed border-slate-300 rounded-2xl text-center text-xs text-slate-400">Selecciona ejercicios del catálogo de la izquierda.</div>';
-      return;
-    }
-    box.innerHTML = selectedExercises.map((ex, i) => `
-      <div class="p-3 bg-teal-50 border border-teal-100 rounded-xl flex justify-between items-center text-xs">
-        <div>
-          <p class="font-bold text-slate-900">${i + 1}. ${escapeHtml(ex.nombre)}</p>
-          <p class="text-[10px] text-slate-600">${ex.series || '3'} series x ${ex.repeticiones || '12'} reps</p>
-        </div>
-        <button onclick="selectedExercises.splice(${i}, 1); renderSelectedExercises();" class="text-slate-400 hover:text-red-500 p-1">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </div>
-    `).join('');
-  }
+          <div class="flex gap-4">
 
-  function sendPautaWhatsApp() {
-    const phone = normalizePhone(document.getElementById('pautaPhone').value);
-    if (!phone) return showToast('Ingresa un número de WhatsApp.', 'error');
+            <div class="w-12 h-12 shrink-0 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center">
+              <i class="fa-solid fa-user"></i>
+            </div>
 
-    let text = `🏥 *${CLINIC_NAME} - PAUTA DE EJERCICIOS*\n👨‍⚕️ *${PROFESSIONAL_NAME}*\n\n`;
-    if (selectedExercises.length) {
-      selectedExercises.forEach((ex, i) => {
-        text += `*${i + 1}. ${ex.nombre}*\n• ${ex.series || '3'} series x ${ex.repeticiones || '12'} reps\n\n`;
-      });
-    }
-    const extra = document.getElementById('pautaExtra').value.trim();
-    if (extra) text += `📌 *Indicaciones:* ${extra}\n`;
+            <div>
 
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
-  }
+              <h3 class="font-bold text-slate-800">
+                ${escapeHTML(patient.nombre)}
+              </h3>
 
-  function copyRoutineText() {
-    let text = `🏥 *${CLINIC_NAME} - PAUTA DE EJERCICIOS*\n👨‍⚕️ *${PROFESSIONAL_NAME}*\n\n`;
-    if (selectedExercises.length) {
-      selectedExercises.forEach((ex, i) => {
-        text += `*${i + 1}. ${ex.nombre}*\n• ${ex.series || '3'} series x ${ex.repeticiones || '12'} reps\n\n`;
-      });
-    }
-    const extra = document.getElementById('pautaExtra').value.trim();
-    if (extra) text += `📌 *Indicaciones:* ${extra}\n`;
+              <p class="text-sm text-slate-500">
+                ${escapeHTML(rut)}
+              </p>
 
-    document.execCommand('copy');
-    showToast('Pauta copiada al portapapeles.');
-  }
+            </div>
 
-  /* ============================================================
-     AGENDA & CITAS
-     ============================================================ */
-  function setDefaultAppointmentDateTime() {
-    const now = new Date();
-    document.getElementById('apptDate').value = now.toISOString().slice(0, 10);
-    document.getElementById('apptTime').value = '09:00';
-  }
-
-  function populateAppointmentPatients() {
-    const select = document.getElementById('apptPatientRut');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Seleccionar Paciente --</option>' +
-      allPatients.map(p => `<option value="${escapeAttr(p.rut)}">${escapeHtml(p.nombre)} (${escapeHtml(p.rut)})</option>`).join('');
-  }
-
-  async function saveAppointment(e) {
-    e.preventDefault();
-    if (!supabaseClient) return showToast('Error de conexión a Supabase.', 'error');
-
-    const rut_paciente = document.getElementById('apptPatientRut').value;
-    const patient = allPatients.find(p => p.rut === rut_paciente);
-    if (!patient) return showToast('Selecciona un paciente.', 'error');
-
-    const fecha = document.getElementById('apptDate').value;
-    const hora = document.getElementById('apptTime').value;
-    const estado = document.getElementById('apptEstado').value;
-
-    const { data, error } = await supabaseClient.from('citas').insert([{
-      rut_paciente, fecha, hora, estado
-    }]).select().single();
-
-    if (error) {
-      showToast('No se pudo guardar la cita: ' + error.message, 'error');
-      return;
-    }
-
-    currentAppointmentPayload = {
-      patientName: patient.nombre,
-      phone: normalizePhone(patient.telefono || ''),
-      date: fecha,
-      time: hora
-    };
-
-    document.getElementById('appointmentActionSummary').textContent = `${patient.nombre} · ${fecha} a las ${hora} hrs`;
-    document.getElementById('appointmentActionModal').classList.remove('hidden');
-    document.getElementById('appointmentActionModal').classList.add('flex');
-
-    showToast('Cita agendada correctamente.');
-    await loadAppointments();
-  }
-
-  async function loadAppointments() {
-    if (!supabaseClient) return;
-    const { data } = await supabaseClient.from('citas').select('*').order('fecha', { ascending: true });
-    allAppointments = data || [];
-    renderAppointmentsList();
-    updateDashboard();
-  }
-
-  function renderAppointmentsList() {
-    const list = document.getElementById('appointmentsList');
-    if (!allAppointments.length) {
-      list.innerHTML = '<p class="text-xs text-slate-400">No hay citas agendadas.</p>';
-      return;
-    }
-    list.innerHTML = allAppointments.map(a => {
-      const patient = allPatients.find(p => p.rut === a.rut_paciente);
-      return `
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
-          <div>
-            <p class="font-bold text-slate-900">${escapeHtml(patient?.nombre || a.rut_paciente)}</p>
-            <p class="text-[10px] text-slate-500"><i class="fa-regular fa-calendar mr-1"></i>${a.fecha} - ${a.hora} hrs</p>
           </div>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${a.estado === 'Confirmada' ? 'bg-teal-100 text-teal-800' : 'bg-slate-200 text-slate-700'}">${a.estado || 'Agendada'}</span>
+
         </div>
+
+
+        <div class="mt-5 space-y-2 text-sm">
+
+          ${
+            patient.telefono
+              ? `
+                <div class="flex gap-2 text-slate-600">
+                  <i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400"></i>
+                  ${escapeHTML(patient.telefono)}
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            patient.fecha_nacimiento
+              ? `
+                <div class="flex gap-2 text-slate-600">
+                  <i class="fa-solid fa-cake-candles w-4 mt-0.5 text-slate-400"></i>
+                  ${formatDate(patient.fecha_nacimiento)}
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            patient.diagnostico
+              ? `
+                <div class="flex gap-2 text-slate-600">
+                  <i class="fa-solid fa-stethoscope w-4 mt-0.5 text-slate-400"></i>
+                  ${escapeHTML(patient.diagnostico)}
+                </div>
+              `
+              : ""
+          }
+
+        </div>
+
+
+        <div class="mt-5 pt-4 border-t border-slate-100 flex gap-2">
+
+          <button
+            class="patient-attention flex-1 bg-teal-700 hover:bg-teal-800 text-white rounded-xl py-2.5 text-sm font-semibold"
+            data-rut="${escapeHTML(rut)}"
+          >
+            <i class="fa-solid fa-plus mr-1"></i>
+            Atención
+          </button>
+
+          <button
+            class="patient-history px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-sm"
+            data-rut="${escapeHTML(rut)}"
+          >
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </button>
+
+        </div>
+
+      </article>
+    `;
+
+  }).join("");
+
+  container
+    .querySelectorAll(".patient-attention")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const rut = button.dataset.rut;
+
+        selectPatientForAttention(rut);
+
+      });
+
+    });
+
+
+  container
+    .querySelectorAll(".patient-history")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        openPatientHistory(button.dataset.rut);
+
+      });
+
+    });
+}
+
+
+function populatePatientSelects() {
+
+  const select =
+    document.getElementById("appointmentPatient");
+
+  select.innerHTML = `
+    <option value="">
+      Seleccionar paciente
+    </option>
+  `;
+
+  state.patients.forEach(patient => {
+
+    const option = document.createElement("option");
+
+    option.value = patient.rut;
+
+    option.textContent =
+      `${patient.nombre} — ${patient.rut}`;
+
+    select.appendChild(option);
+  });
+}
+
+
+function openPatientModal() {
+
+  document.getElementById("patientForm").reset();
+
+  document.getElementById("patientModalTitle").textContent =
+    "Nuevo Paciente";
+
+  document.getElementById("rutValidationMessage").textContent = "";
+
+  document
+    .getElementById("patientModal")
+    .classList.remove("hidden");
+}
+
+
+async function savePatient() {
+
+  const button =
+    document.getElementById("savePatientButton");
+
+  const rawRut =
+    document.getElementById("patientRut").value;
+
+  const rut = formatRut(rawRut);
+
+  const nombre =
+    document.getElementById("patientName").value.trim();
+
+  const fechaNacimiento =
+    document.getElementById("patientBirthDate").value || null;
+
+  const telefono =
+    document.getElementById("patientPhone").value.trim();
+
+  const diagnostico =
+    document.getElementById("patientDiagnosis").value.trim();
+
+
+  if (!rut || !validateRut(rut)) {
+
+    showToast(
+      "El RUT ingresado no es válido.",
+      "warning"
+    );
+
+    return;
+  }
+
+  if (!nombre) {
+
+    showToast(
+      "Ingrese el nombre del paciente.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  setButtonLoading(
+    button,
+    true,
+    "Guardando..."
+  );
+
+
+  /*
+    IMPORTANTE:
+    La migración SQL agrega fecha_nacimiento.
+    El payload utiliza exactamente ese nombre.
+  */
+
+  const payload = {
+    rut,
+    nombre,
+    telefono: telefono || null,
+    diagnostico: diagnostico || null,
+    fecha_nacimiento: fechaNacimiento
+  };
+
+
+  const {
+    error
+  } = await supabaseClient
+    .from("pacientes")
+    .insert(payload);
+
+
+  setButtonLoading(button, false);
+
+
+  if (error) {
+
+    console.error("savePatient:", error);
+
+    if (
+      error.code === "23505"
+    ) {
+
+      showToast(
+        "Ya existe un paciente con ese RUT.",
+        "error"
+      );
+
+    } else {
+
+      showToast(
+        `No se pudo guardar el paciente: ${error.message}`,
+        "error"
+      );
+    }
+
+    return;
+  }
+
+
+  showToast(
+    "Paciente registrado correctamente."
+  );
+
+  closeModal("patientModal");
+
+  await loadPatients();
+
+  selectPatientForAttention(rut);
+}
+
+
+/* ============================================================
+   SELECCIONAR PACIENTE PARA NUEVA ATENCIÓN
+============================================================ */
+
+function selectPatientForAttention(rut) {
+
+  const patient =
+    state.patients.find(
+      p => p.rut === rut
+    );
+
+  if (!patient) {
+
+    showToast(
+      "No se encontró el paciente seleccionado.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  state.selectedAttentionRut = patient.rut;
+
+  document.getElementById(
+    "attentionPatientRut"
+  ).value = patient.rut;
+
+  document.getElementById(
+    "attentionPatientSearch"
+  ).value =
+    `${patient.nombre} — ${patient.rut}`;
+
+
+  const badge =
+    document.getElementById(
+      "selectedPatientBadge"
+    );
+
+  badge.innerHTML = `
+    <div class="flex items-center gap-3">
+
+      <div class="w-9 h-9 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center">
+        <i class="fa-solid fa-user-check"></i>
+      </div>
+
+      <div>
+        <p class="font-semibold text-teal-900">
+          ${escapeHTML(patient.nombre)}
+        </p>
+
+        <p class="text-xs text-teal-700">
+          RUT: ${escapeHTML(patient.rut)}
+        </p>
+      </div>
+
+    </div>
+  `;
+
+  badge.classList.remove("hidden");
+
+
+  document
+    .getElementById("saveAttentionButton")
+    .disabled = false;
+
+
+  /*
+    Si el paciente tiene diagnóstico,
+    se intenta cargar automáticamente.
+  */
+
+  if (patient.diagnostico) {
+
+    const diagnosisSelect =
+      document.getElementById(
+        "attentionDiagnosis"
+      );
+
+    const matchingOption =
+      Array.from(
+        diagnosisSelect.options
+      ).find(
+        option =>
+          option.value.toLowerCase() ===
+          patient.diagnostico.toLowerCase()
+      );
+
+    if (matchingOption) {
+      diagnosisSelect.value =
+        matchingOption.value;
+    }
+  }
+
+
+  openTab("atencion");
+
+  document
+    .getElementById("attentionPatientResults")
+    .classList.add("hidden");
+
+  document
+    .getElementById("attentionPatientSearch")
+    .focus();
+}
+
+
+/* ============================================================
+   BUSCADOR DE PACIENTE — NUEVA ATENCIÓN
+============================================================ */
+
+function searchAttentionPatients() {
+
+  const input =
+    document.getElementById(
+      "attentionPatientSearch"
+    );
+
+  const results =
+    document.getElementById(
+      "attentionPatientResults"
+    );
+
+  const query =
+    input.value
+      .trim()
+      .toLowerCase();
+
+
+  if (!query) {
+
+    results.classList.add("hidden");
+
+    return;
+  }
+
+
+  const matches =
+    state.patients
+      .filter(patient => {
+
+        const name =
+          String(patient.nombre || "")
+            .toLowerCase();
+
+        const rut =
+          String(patient.rut || "")
+            .toLowerCase();
+
+        return (
+          name.includes(query) ||
+          rut.includes(query)
+        );
+
+      })
+      .slice(0, 10);
+
+
+  if (!matches.length) {
+
+    results.innerHTML = `
+      <div class="p-4 text-sm text-slate-500">
+        No se encontraron pacientes.
+      </div>
+    `;
+
+    results.classList.remove("hidden");
+
+    return;
+  }
+
+
+  results.innerHTML =
+    matches.map(patient => {
+
+      return `
+        <button
+          type="button"
+          class="autocomplete-item w-full text-left p-4 border-b border-slate-100 last:border-b-0"
+          data-rut="${escapeHTML(patient.rut)}"
+        >
+
+          <div class="flex items-center gap-3">
+
+            <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center">
+              <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div>
+
+              <p class="font-semibold text-slate-800">
+                ${escapeHTML(patient.nombre)}
+              </p>
+
+              <p class="text-xs text-slate-500">
+                ${escapeHTML(patient.rut)}
+              </p>
+
+            </div>
+
+          </div>
+
+        </button>
       `;
-    }).join('');
+
+    }).join("");
+
+
+  /*
+    CORRECCIÓN CRÍTICA:
+    No dependemos de un click sobre el contenedor.
+    Cada paciente tiene su propio listener.
+    Al hacer click:
+      1. asignamos rut interno
+      2. asignamos hidden input
+      3. actualizamos buscador
+      4. habilitamos guardar
+  */
+
+  results
+    .querySelectorAll(".autocomplete-item")
+    .forEach(item => {
+
+      item.addEventListener(
+        "click",
+        event => {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+          const rut =
+            item.dataset.rut;
+
+          selectPatientForAttention(rut);
+
+        }
+      );
+
+    });
+
+
+  results.classList.remove("hidden");
+}
+
+
+/* ============================================================
+   ATENCIONES
+============================================================ */
+
+async function loadAttentions() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("atenciones")
+    .select("*")
+    .order("created_at", {
+      ascending: false
+    });
+
+
+  if (error) {
+
+    console.error("loadAttentions:", error);
+
+    showToast(
+      "No se pudieron cargar las atenciones.",
+      "error"
+    );
+
+    return;
   }
 
-  function sendCurrentReminderWhatsApp() {
-    if (!currentAppointmentPayload) return;
-    const p = currentAppointmentPayload;
-    const text = `Hola ${p.patientName}, te recordamos tu cita de Kinesiología para el día ${p.date} a las ${p.time} hrs con ${PROFESSIONAL_NAME} (${CLINIC_NAME}).`;
-    window.open(`https://wa.me/${p.phone}?text=${encodeURIComponent(text)}`, '_blank');
+
+  state.attentions = data || [];
+}
+
+
+function getNextSessionNumber(rut) {
+
+  const sessions =
+    state.attentions
+      .filter(
+        attention =>
+          attention.rut_paciente === rut
+      )
+      .map(
+        attention =>
+          Number(attention.sesion_num) || 0
+      );
+
+  if (!sessions.length) {
+    return 1;
   }
 
-  function downloadCurrentICS() {
-    if (!currentAppointmentPayload) return;
-    const p = currentAppointmentPayload;
-    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//CyJ Kinesiologia//ES\nBEGIN:VEVENT\nSUMMARY:Cita Kinesiología - ${p.patientName}\nDESCRIPTION:Cita kinésica con ${PROFESSIONAL_NAME}\nLOCATION:${CLINIC_NAME}\nDTSTART:${p.date.replace(/-/g, '')}T${p.time.replace(':', '')}00\nBEGIN:VALARM\nTRIGGER:-P1D\nACTION:DISPLAY\nEND:VALARM\nBEGIN:VALARM\nTRIGGER:-PT1H\nACTION:DISPLAY\nEND:VALARM\nEND:VEVENT\nEND:VCALENDAR`;
-    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `cita-${p.patientName}.ics`;
-    link.click();
+  return Math.max(...sessions) + 1;
+}
+
+
+async function saveAttention() {
+
+  const button =
+    document.getElementById(
+      "saveAttentionButton"
+    );
+
+  const rut =
+    document
+      .getElementById("attentionPatientRut")
+      .value;
+
+
+  /*
+    Esta comprobación usa el hidden input como
+    fuente de verdad.
+  */
+
+  if (!rut) {
+
+    showToast(
+      "Debe seleccionar un paciente.",
+      "warning"
+    );
+
+    return;
   }
 
-  function openCurrentGoogleCalendar() {
-    if (!currentAppointmentPayload) return;
-    const p = currentAppointmentPayload;
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Cita+Kinesiología+-+${encodeURIComponent(p.patientName)}&details=Atención+con+${encodeURIComponent(PROFESSIONAL_NAME)}`;
-    window.open(url, '_blank');
+
+  const patient =
+    state.patients.find(
+      p => p.rut === rut
+    );
+
+
+  if (!patient) {
+
+    showToast(
+      "El paciente seleccionado no existe.",
+      "error"
+    );
+
+    return;
   }
 
-  function normalizePhone(phone) {
-    let clean = String(phone || '').replace(/[^\d]/g, '');
-    if (!clean) return '';
-    if (clean.length === 9) return '56' + clean;
-    return clean;
+
+  const zone =
+    document
+      .getElementById("attentionZone")
+      .value
+      .trim();
+
+
+  const evaInicio =
+    Number(
+      document.getElementById("evaInicio").value
+    );
+
+
+  const evaFin =
+    Number(
+      document.getElementById("evaFin").value
+    );
+
+
+  const notes =
+    document
+      .getElementById("attentionNotes")
+      .value
+      .trim();
+
+
+  const sessionNumber =
+    getNextSessionNumber(rut);
+
+
+  setButtonLoading(
+    button,
+    true,
+    "Guardando..."
+  );
+
+
+  const payload = {
+    rut_paciente: rut,
+    zona: zone || null,
+    eva_inicio: evaInicio,
+    eva_fin: evaFin,
+    notas: notes || null,
+    sesion_num: sessionNumber
+  };
+
+
+  const {
+    error
+  } = await supabaseClient
+    .from("atenciones")
+    .insert(payload);
+
+
+  setButtonLoading(button, false);
+
+
+  if (error) {
+
+    console.error("saveAttention:", error);
+
+    showToast(
+      `No se pudo guardar la atención: ${error.message}`,
+      "error"
+    );
+
+    return;
   }
 
-  function formatDateTime(str) {
-    if (!str) return '';
-    const d = new Date(str);
-    return d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+
+  showToast(
+    `Atención N.º ${sessionNumber} registrada correctamente.`
+  );
+
+
+  await loadAttentions();
+
+  document
+    .getElementById("attentionForm")
+    .reset();
+
+  state.selectedAttentionRut = "";
+
+  document
+    .getElementById("attentionPatientRut")
+    .value = "";
+
+  document
+    .getElementById("selectedPatientBadge")
+    .classList.add("hidden");
+
+  document
+    .getElementById("saveAttentionButton")
+    .disabled = true;
+
+  updateEVADisplay();
+
+  await refreshDashboardMetrics();
+}
+
+
+/* ============================================================
+   DIAGNÓSTICOS
+============================================================ */
+
+async function loadDiagnoses() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("diagnosticos")
+    .select("*")
+    .order("nombre", {
+      ascending: true
+    });
+
+
+  if (error) {
+
+    /*
+      Si la tabla todavía no existe,
+      no bloqueamos toda la aplicación.
+    */
+
+    console.warn(
+      "No fue posible cargar diagnósticos:",
+      error.message
+    );
+
+    return;
   }
 
-  function escapeHtml(str) {
-    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  state.diagnoses = data || [];
+
+  populateDiagnosisSelects();
+}
+
+
+function populateDiagnosisSelects() {
+
+  const selects = [
+    document.getElementById("patientDiagnosis"),
+    document.getElementById("attentionDiagnosis")
+  ];
+
+
+  selects.forEach(select => {
+
+    if (!select) {
+      return;
+    }
+
+
+    select.innerHTML = `
+      <option value="">
+        Seleccionar diagnóstico
+      </option>
+    `;
+
+
+    state.diagnoses.forEach(diagnosis => {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        diagnosis.nombre;
+
+      option.textContent =
+        diagnosis.nombre;
+
+      select.appendChild(option);
+
+    });
+
+  });
+}
+
+
+/* ============================================================
+   EJERCICIOS
+============================================================ */
+
+async function loadExercises() {
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("ejercicios")
+    .select("*")
+    .order("nombre", {
+      ascending: true
+    });
+
+
+  if (error) {
+
+    console.error("loadExercises:", error);
+
+    showToast(
+      "No se pudieron cargar los ejercicios.",
+      "error"
+    );
+
+    return;
   }
 
-  function escapeAttr(str) {
-    return escapeHtml(str);
+
+  state.exercises = data || [];
+
+  renderExercises();
+}
+
+
+function renderExercises() {
+
+  const container =
+    document.getElementById(
+      "exerciseList"
+    );
+
+
+  const search =
+    document
+      .getElementById("exerciseSearch")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  let exercises =
+    state.exercises;
+
+
+  if (search) {
+
+    exercises =
+      exercises.filter(exercise => {
+
+        const text = [
+          exercise.nombre,
+          exercise.zona,
+          exercise.grupo_muscular,
+          exercise.instrucciones
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return text.includes(search);
+
+      });
   }
 
-  async function updateDashboard() {
-    if (!supabaseClient) return;
-    const { count: totalAtt } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true });
-    document.getElementById('statTotalAttentions').textContent = totalAtt || 0;
 
-    const firstDayMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-    const { count: monthAtt } = await supabaseClient.from('atenciones').select('*', { count: 'exact', head: true }).gte('created_at', firstDayMonth);
-    document.getElementById('statMonthAttentions').textContent = monthAtt || 0;
+  if (!exercises.length) {
 
-    document.getElementById('statUpcomingAppointments').textContent = allAppointments.length;
+    container.innerHTML = `
+      <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-10 text-center">
+        <i class="fa-solid fa-dumbbell text-3xl text-slate-300"></i>
+        <p class="font-semibold text-slate-600 mt-3">
+          No hay ejercicios para mostrar.
+        </p>
+      </div>
+    `;
+
+    return;
   }
+
+
+  container.innerHTML =
+    exercises.map(exercise => {
+
+      const video =
+        safeURL(exercise.video_url);
+
+      const resource =
+        safeURL(exercise.recurso_url);
+
+
+      const series =
+        exercise.series_default ??
+        exercise.series ??
+        "";
+
+
+      const reps =
+        exercise.repeticiones_default ??
+        exercise.repeticiones ??
+        "";
+
+
+      const hold =
+        exercise.tiempo_sosten_default ??
+        exercise.tiempo_sostén_default ??
+        exercise.tiempo_sosten ??
+        "";
+
+
+      return `
+        <article
+          class="bg-white border border-slate-200 rounded-2xl p-5 card-hover"
+        >
+
+          <div class="flex items-start justify-between gap-3">
+
+            <div>
+
+              <h3 class="font-bold text-slate-800 text-lg">
+                ${escapeHTML(exercise.nombre)}
+              </h3>
+
+              <p class="text-sm text-teal-700 mt-1">
+                ${escapeHTML(
+                  exercise.zona ||
+                  exercise.grupo_muscular ||
+                  "Sin zona definida"
+                )}
+              </p>
+
+            </div>
+
+            <div class="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-dumbbell"></i>
+            </div>
+
+          </div>
+
+
+          <div class="grid grid-cols-3 gap-2 mt-5">
+
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+
+              <p class="text-xs text-slate-500">
+                Series
+              </p>
+
+              <p class="font-bold text-slate-800 mt-1">
+                ${escapeHTML(series || "—")}
+              </p>
+
+            </div>
+
+
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+
+              <p class="text-xs text-slate-500">
+                Reps
+              </p>
+
+              <p class="font-bold text-slate-800 mt-1">
+                ${escapeHTML(reps || "—")}
+              </p>
+
+            </div>
+
+
+            <div class="bg-slate-50 rounded-xl p-3 text-center">
+
+              <p class="text-xs text-slate-500">
+                Sostén
+              </p>
+
+              <p class="font-bold text-slate-800 mt-1">
+                ${escapeHTML(
+                  hold
+                    ? `${hold}s`
+                    : "—"
+                )}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          ${
+            exercise.instrucciones
+              ? `
+                <div class="mt-5">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                    Instrucciones
+                  </p>
+
+                  <p class="text-sm text-slate-600 whitespace-pre-line">
+                    ${escapeHTML(exercise.instrucciones)}
+                  </p>
+                </div>
+              `
+              : ""
+          }
+
+
+          <div class="flex gap-2 mt-5">
+
+            ${
+              video
+                ? `
+                  <a
+                    href="${escapeHTML(video)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl py-2.5 text-sm font-semibold text-center"
+                  >
+                    <i class="fa-brands fa-youtube mr-1"></i>
+                    Video
+                  </a>
+                `
+                : ""
+            }
+
+
+            ${
+              resource
+                ? `
+                  <a
+                    href="${escapeHTML(resource)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl py-2.5 text-sm font-semibold text-center"
+                  >
+                    <i class="fa-solid fa-file-pdf mr-1"></i>
+                    PDF / Recurso
+                  </a>
+                `
+                : ""
+            }
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
+}
+
+
+function openExerciseModal() {
+
+  document
+    .getElementById("exerciseForm")
+    .reset();
+
+  document
+    .getElementById("exerciseModal")
+    .classList.remove("hidden");
+}
+
+
+async function saveExercise() {
+
+  const button =
+    document.getElementById(
+      "saveExerciseButton"
+    );
+
+
+  const nombre =
+    document
+      .getElementById("exerciseName")
+      .value
+      .trim();
+
+
+  const zona =
+    document
+      .getElementById("exerciseZone")
+      .value
+      .trim();
+
+
+  const series =
+    document
+      .getElementById("exerciseSeries")
+      .value;
+
+
+  const repeticiones =
+    document
+      .getElementById("exerciseReps")
+      .value;
+
+
+  const tiempo =
+    document
+      .getElementById("exerciseHold")
+      .value;
+
+
+  const video =
+    document
+      .getElementById("exerciseVideo")
+      .value
+      .trim();
+
+
+  const recurso =
+    document
+      .getElementById("exercisePdf")
+      .value
+      .trim();
+
+
+  const instrucciones =
+    document
+      .getElementById("exerciseInstructions")
+      .value
+      .trim();
+
+
+  if (!nombre || !zona) {
+
+    showToast(
+      "Nombre y zona anatómica son obligatorios.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  if (video && !safeURL(video)) {
+
+    showToast(
+      "La URL del video no es válida.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  if (recurso && !safeURL(recurso)) {
+
+    showToast(
+      "La URL del recurso/PDF no es válida.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  setButtonLoading(
+    button,
+    true,
+    "Guardando..."
+  );
+
+
+  /*
+    Se utilizan nombres explícitos.
+    El SQL de migración crea estas columnas.
+  */
+
+  const payload = {
+    nombre,
+    zona,
+    series_default:
+      series ? Number(series) : null,
+    repeticiones_default:
+      repeticiones ? Number(repeticiones) : null,
+    tiempo_sosten_default:
+      tiempo ? Number(tiempo) : null,
+    video_url:
+      video || null,
+    recurso_url:
+      recurso || null,
+    instrucciones:
+      instrucciones || null
+  };
+
+
+  const {
+    error
+  } = await supabaseClient
+    .from("ejercicios")
+    .insert(payload);
+
+
+  setButtonLoading(button, false);
+
+
+  if (error) {
+
+    console.error(
+      "saveExercise:",
+      error
+    );
+
+    showToast(
+      `No se pudo guardar el ejercicio: ${error.message}`,
+      "error"
+    );
+
+    return;
+  }
+
+
+  showToast(
+    "Ejercicio agregado correctamente."
+  );
+
+
+  closeModal("exerciseModal");
+
+  await loadExercises();
+}
+
+
+/* ============================================================
+   CITAS
+============================================================ */
+
+async function loadAppointments() {
+
+  const today =
+    todayISO();
+
+
+  /*
+    CORRECCIÓN CRÍTICA:
+    El filtro de fecha se realiza directamente
+    en Supabase.
+
+    fecha >= HOY
+
+    Por lo tanto, una cita pasada no llega
+    al listado activo.
+  */
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("citas")
+    .select("*")
+    .gte("fecha", today)
+    .order("fecha", {
+      ascending: true
+    })
+    .order("hora", {
+      ascending: true
+    });
+
+
+  if (error) {
+
+    console.error(
+      "loadAppointments:",
+      error
+    );
+
+    showToast(
+      `No se pudo cargar la agenda: ${error.message}`,
+      "error"
+    );
+
+    return;
+  }
+
+
+  state.appointments =
+    data || [];
+
+
+  renderAppointments();
+
+  renderDashboardAppointments();
+}
+
+
+function getPatientByRut(rut) {
+
+  return state.patients.find(
+    patient =>
+      patient.rut === rut
+  );
+}
+
+
+function renderAppointments() {
+
+  const container =
+    document.getElementById(
+      "appointmentsList"
+    );
+
+
+  const today =
+    todayISO();
+
+
+  /*
+    Segunda barrera de seguridad:
+    aunque Supabase ya filtró, también
+    filtramos en memoria.
+  */
+
+  let appointments =
+    state.appointments.filter(
+      appointment =>
+        appointment.fecha >= today
+    );
+
+
+  const search =
+    document
+      .getElementById("agendaSearch")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  const dateFilter =
+    document
+      .getElementById("agendaDateFilter")
+      .value;
+
+
+  if (search) {
+
+    appointments =
+      appointments.filter(appointment => {
+
+        const patient =
+          getPatientByRut(
+            appointment.rut_paciente
+          );
+
+        return (
+          String(
+            patient?.nombre || ""
+          )
+            .toLowerCase()
+            .includes(search) ||
+
+          String(
+            appointment.rut_paciente || ""
+          )
+            .toLowerCase()
+            .includes(search)
+        );
+
+      });
+  }
+
+
+  if (dateFilter) {
+
+    appointments =
+      appointments.filter(
+        appointment =>
+          appointment.fecha === dateFilter
+      );
+  }
+
+
+  if (!appointments.length) {
+
+    container.innerHTML = `
+      <div class="p-10 text-center">
+
+        <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300"></i>
+
+        <p class="font-semibold text-slate-600 mt-4">
+          No hay próximas citas.
+        </p>
+
+        <p class="text-sm text-slate-400 mt-1">
+          Las citas anteriores a hoy no aparecen en la agenda activa.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    appointments.map(appointment => {
+
+      const patient =
+        getPatientByRut(
+          appointment.rut_paciente
+        );
+
+
+      const status =
+        appointment.estado ||
+        "agendada";
+
+
+      const statusClass =
+        status === "confirmada"
+          ? "bg-emerald-50 text-emerald-700"
+          : status === "cancelada"
+            ? "bg-red-50 text-red-700"
+            : "bg-amber-50 text-amber-700";
+
+
+      return `
+        <article
+          class="p-5 hover:bg-slate-50 transition"
+        >
+
+          <div class="flex flex-col lg:flex-row lg:items-center gap-5">
+
+            <div class="w-full lg:w-24 text-center lg:border-r border-slate-200 lg:pr-5">
+
+              <p class="text-xs uppercase font-semibold text-slate-400">
+                ${formatDate(appointment.fecha)}
+              </p>
+
+              <p class="text-2xl font-bold text-teal-700 mt-1">
+                ${escapeHTML(appointment.hora || "—")}
+              </p>
+
+            </div>
+
+
+            <div class="flex-1">
+
+              <h3 class="font-bold text-slate-800">
+                ${escapeHTML(
+                  patient?.nombre ||
+                  "Paciente no encontrado"
+                )}
+              </h3>
+
+              <p class="text-sm text-slate-500">
+                ${escapeHTML(
+                  appointment.rut_paciente
+                )}
+              </p>
+
+              <p class="text-sm text-slate-500 mt-2">
+                <i class="fa-solid fa-calendar-day mr-1"></i>
+                ${formatDateLong(appointment.fecha)}
+              </p>
+
+            </div>
+
+
+            <div class="flex flex-wrap gap-2">
+
+              <span class="px-3 py-1.5 rounded-full text-xs font-semibold ${statusClass}">
+                ${escapeHTML(status)}
+              </span>
+
+
+              <button
+                class="calendar-event-button px-3 py-1.5 rounded-xl border border-slate-300 hover:bg-white text-sm"
+                data-id="${escapeHTML(appointment.id)}"
+              >
+                <i class="fa-solid fa-calendar-plus"></i>
+              </button>
+
+
+              ${
+                patient?.telefono
+                  ? `
+                    <button
+                      class="appointment-whatsapp px-3 py-1.5 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 text-sm"
+                      data-id="${escapeHTML(appointment.id)}"
+                    >
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </button>
+                  `
+                  : ""
+              }
+
+            </div>
+
+          </div>
+
+        </article>
+      `;
+
+    }).join("");
+
+
+  container
+    .querySelectorAll(".calendar-event-button")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const appointment =
+            state.appointments.find(
+              a =>
+                a.id === button.dataset.id
+            );
+
+          if (appointment) {
+            downloadICS(appointment);
+          }
+
+        }
+      );
+
+    });
+
+
+  container
+    .querySelectorAll(".appointment-whatsapp")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const appointment =
+            state.appointments.find(
+              a =>
+                a.id === button.dataset.id
+            );
+
+          if (appointment) {
+            openAppointmentWhatsApp(
+              appointment
+            );
+          }
+
+        }
+      );
+
+    });
+}
+
+
+function renderDashboardAppointments() {
+
+  const container =
+    document.getElementById(
+      "dashboardAppointments"
+    );
+
+
+  const today =
+    todayISO();
+
+
+  const upcoming =
+    state.appointments
+      .filter(
+        appointment =>
+          appointment.fecha >= today
+      )
+      .slice(0, 5);
+
+
+  if (!upcoming.length) {
+
+    container.innerHTML = `
+      <div class="p-8 text-center text-slate-400">
+        No hay próximas citas.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    upcoming.map(appointment => {
+
+      const patient =
+        getPatientByRut(
+          appointment.rut_paciente
+        );
+
+
+      return `
+        <button
+          class="dashboard-appointment w-full p-5 text-left hover:bg-slate-50"
+          data-id="${escapeHTML(appointment.id)}"
+        >
+
+          <div class="flex items-center gap-4">
+
+            <div class="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-calendar-day"></i>
+            </div>
+
+            <div class="flex-1 min-w-0">
+
+              <p class="font-semibold text-slate-800 truncate">
+                ${escapeHTML(
+                  patient?.nombre ||
+                  appointment.rut_paciente
+                )}
+              </p>
+
+              <p class="text-sm text-slate-500">
+                ${formatDate(
+                  appointment.fecha
+                )}
+                ·
+                ${escapeHTML(
+                  appointment.hora || ""
+                )}
+              </p>
+
+            </div>
+
+            <i class="fa-solid fa-chevron-right text-slate-300"></i>
+
+          </div>
+
+        </button>
+      `;
+
+    }).join("");
+
+
+  container
+    .querySelectorAll(".dashboard-appointment")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          openTab("agenda");
+
+          const appointment =
+            state.appointments.find(
+              a =>
+                a.id === button.dataset.id
+            );
+
+          if (appointment) {
+
+            document
+              .getElementById("agendaSearch")
+              .value =
+              getPatientByRut(
+                appointment.rut_paciente
+              )?.nombre || "";
+
+            renderAppointments();
+          }
+
+        }
+      );
+
+    });
+}
+
+
+/* ============================================================
+   CREACIÓN DE CITA
+============================================================ */
+
+function openAppointmentModal() {
+
+  populatePatientSelects();
+
+  document
+    .getElementById("appointmentForm")
+    .reset();
+
+
+  document
+    .getElementById("appointmentDate")
+    .min = todayISO();
+
+
+  document
+    .getElementById("appointmentDate")
+    .value = todayISO();
+
+
+  document
+    .getElementById("appointmentModal")
+    .classList.remove("hidden");
+}
+
+
+async function saveAppointment() {
+
+  const button =
+    document.getElementById(
+      "saveAppointmentButton"
+    );
+
+
+  const rut =
+    document
+      .getElementById("appointmentPatient")
+      .value;
+
+
+  const fecha =
+    document
+      .getElementById("appointmentDate")
+      .value;
+
+
+  const hora =
+    document
+      .getElementById("appointmentTime")
+      .value;
+
+
+  const estado =
+    document
+      .getElementById("appointmentStatus")
+      .value;
+
+
+  if (!rut || !fecha || !hora) {
+
+    showToast(
+      "Complete paciente, fecha y hora.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  if (fecha < todayISO()) {
+
+    showToast(
+      "No se pueden crear citas con fecha anterior a hoy.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  /*
+    CORRECCIÓN CRÍTICA DEL ERROR "hora":
+    El payload utiliza exactamente:
+       rut_paciente
+       fecha
+       hora
+       estado
+
+    Si la migración SQL fue ejecutada,
+    estas columnas existirán en PostgreSQL.
+  */
+
+  const payload = {
+    rut_paciente: rut,
+    fecha,
+    hora,
+    estado
+  };
+
+
+  setButtonLoading(
+    button,
+    true,
+    "Guardando..."
+  );
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("citas")
+    .insert(payload)
+    .select()
+    .single();
+
+
+  setButtonLoading(button, false);
+
+
+  if (error) {
+
+    console.error(
+      "saveAppointment:",
+      error
+    );
+
+    showToast(
+      `No se pudo guardar la cita: ${error.message}`,
+      "error"
+    );
+
+    return;
+  }
+
+
+  showToast(
+    "Cita guardada correctamente."
+  );
+
+
+  closeModal("appointmentModal");
+
+
+  await loadAppointments();
+
+  await refreshDashboardMetrics();
+
+
+  /*
+    Generamos automáticamente el ICS
+    después de guardar.
+  */
+
+  downloadICS(data);
+}
+
+
+/* ============================================================
+   GOOGLE CALENDAR
+============================================================ */
+
+function buildGoogleCalendarURL(appointment) {
+
+  const patient =
+    getPatientByRut(
+      appointment.rut_paciente
+    );
+
+
+  const title =
+    `Atención de Kinesiología — ${patient?.nombre || "Paciente"}`;
+
+
+  const start =
+    localDateTimeToGoogleDate(
+      appointment.fecha,
+      appointment.hora
+    );
+
+
+  const endDate =
+    new Date(start);
+
+
+  endDate.setMinutes(
+    endDate.getMinutes() + 60
+  );
+
+
+  const end =
+    formatGoogleDate(endDate);
+
+
+  const details =
+    "Atención de Kinesiología en CyJ Kinesiología.";
+
+
+  const params =
+    new URLSearchParams({
+
+      action: "TEMPLATE",
+
+      text: title,
+
+      dates:
+        `${start}/${end}`,
+
+      details,
+
+      ctz: "America/Santiago"
+
+    });
+
+
+  return (
+    "https://calendar.google.com/calendar/render?" +
+    params.toString()
+  );
+}
+
+
+function localDateTimeToGoogleDate(
+  dateString,
+  timeString
+) {
+
+  const [
+    year,
+    month,
+    day
+  ] = dateString
+    .split("-")
+    .map(Number);
+
+
+  const [
+    hour,
+    minute
+  ] = timeString
+    .split(":")
+    .map(Number);
+
+
+  /*
+    Para generar el identificador del evento
+    se utiliza la hora local de Chile.
+  */
+
+  const date =
+    new Date(
+      year,
+      month - 1,
+      day,
+      hour,
+      minute,
+      0
+    );
+
+
+  return formatGoogleDate(date);
+}
+
+
+function formatGoogleDate(date) {
+
+  const year =
+    date.getFullYear();
+
+
+  const month =
+    String(
+      date.getMonth() + 1
+    ).padStart(2, "0");
+
+
+  const day =
+    String(
+      date.getDate()
+    ).padStart(2, "0");
+
+
+  const hour =
+    String(
+      date.getHours()
+    ).padStart(2, "0");
+
+
+  const minute =
+    String(
+      date.getMinutes()
+    ).padStart(2, "0");
+
+
+  const second =
+    String(
+      date.getSeconds()
+    ).padStart(2, "0");
+
+
+  return (
+    `${year}${month}${day}` +
+    `T${hour}${minute}${second}`
+  );
+}
+
+
+/* ============================================================
+   GENERACIÓN ICS
+============================================================ */
+
+function escapeICS(value) {
+
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/\n/g, "\\n")
+    .replace(/,/g, "\\,")
+    .replace(/;/g, "\\;");
+}
+
+
+function icsDateUTC(
+  dateString,
+  timeString
+) {
+
+  const [
+    year,
+    month,
+    day
+  ] = dateString
+    .split("-")
+    .map(Number);
+
+
+  const [
+    hour,
+    minute
+  ] = timeString
+    .split(":")
+    .map(Number);
+
+
+  /*
+    Chile puede cambiar de UTC según DST.
+    Utilizamos la representación local
+    de calendario con TZID en DTSTART.
+  */
+
+  return {
+    year,
+    month,
+    day,
+    hour,
+    minute
+  };
+}
+
+
+function generateICS(appointment) {
+
+  const patient =
+    getPatientByRut(
+      appointment.rut_paciente
+    );
+
+
+  const title =
+    `Atención de Kinesiología — ${
+      patient?.nombre || "Paciente"
+    }`;
+
+
+  const start =
+    icsDateUTC(
+      appointment.fecha,
+      appointment.hora
+    );
+
+
+  const startString =
+    `${String(start.year).padStart(4, "0")}` +
+    `${String(start.month).padStart(2, "0")}` +
+    `${String(start.day).padStart(2, "0")}` +
+    `T${String(start.hour).padStart(2, "0")}` +
+    `${String(start.minute).padStart(2, "0")}00`;
+
+
+  const endDate =
+    new Date(
+      start.year,
+      start.month - 1,
+      start.day,
+      start.hour,
+      start.minute,
+      0
+    );
+
+
+  endDate.setMinutes(
+    endDate.getMinutes() + 60
+  );
+
+
+  const endString =
+    `${String(endDate.getFullYear()).padStart(4, "0")}` +
+    `${String(endDate.getMonth() + 1).padStart(2, "0")}` +
+    `${String(endDate.getDate()).padStart(2, "0")}` +
+    `T${String(endDate.getHours()).padStart(2, "0")}` +
+    `${String(endDate.getMinutes()).padStart(2, "0")}00`;
+
+
+  const uid =
+    `cyj-kinesiologia-${appointment.id}@cyj-kinesiologia`;
+
+
+  const now =
+    new Date();
+
+
+  const dtstamp =
+    now
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "");
+
+
+  /*
+    VALARM:
+      -24H
+      -1H
+
+    Estos recordatorios son independientes
+    del recordatorio asistido por WhatsApp.
+  */
+
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//CyJ Kinesiologia//Agenda Clinica//ES",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+
+    "BEGIN:VEVENT",
+
+    `UID:${escapeICS(uid)}`,
+
+    `DTSTAMP:${dtstamp}`,
+
+    `DTSTART;TZID=America/Santiago:${startString}`,
+
+    `DTEND;TZID=America/Santiago:${endString}`,
+
+    `SUMMARY:${escapeICS(title)}`,
+
+    `DESCRIPTION:${escapeICS(
+      "Atención de Kinesiología en CyJ Kinesiología."
+    )}`,
+
+    "LOCATION:CyJ Kinesiología",
+
+    "BEGIN:VALARM",
+    "TRIGGER:-P1D",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${escapeICS(
+      "Recordatorio: atención de Kinesiología mañana."
+    )}`,
+    "END:VALARM",
+
+    "BEGIN:VALARM",
+    "TRIGGER:-PT1H",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${escapeICS(
+      "Recordatorio: atención de Kinesiología en 1 hora."
+    )}`,
+    "END:VALARM",
+
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+
+
+  return ics;
+}
+
+
+function downloadICS(appointment) {
+
+  const ics =
+    generateICS(appointment);
+
+
+  const blob =
+    new Blob(
+      [ics],
+      {
+        type: "text/calendar;charset=utf-8"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(blob);
+
+
+  const link =
+    document.createElement("a");
+
+
+  link.href = url;
+
+  link.download =
+    `cita-cyj-${appointment.fecha}-${appointment.hora.replace(":", "")}.ics`;
+
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  link.remove();
+
+
+  setTimeout(
+    () => URL.revokeObjectURL(url),
+    1000
+  );
+}
+
+
+/* ============================================================
+   WHATSAPP / RECORDATORIO
+============================================================ */
+
+function buildAppointmentMessage(
+  appointment
+) {
+
+  const patient =
+    getPatientByRut(
+      appointment.rut_paciente
+    );
+
+
+  const message =
+`Hola ${patient?.nombre || ""} 👋
+
+Le recordamos su atención de Kinesiología en CyJ Kinesiología.
+
+📅 Fecha: ${formatDateLong(appointment.fecha)}
+⏰ Hora: ${appointment.hora}
+
+Por favor, puede guardar la cita en su calendario mediante el enlace de Google Calendar:
+
+${buildGoogleCalendarURL(appointment)}
+
+También puede utilizar el archivo .ICS enviado por el centro para guardar la cita con recordatorios de 24 horas y 1 hora antes.
+
+¡Nos vemos!`;
+
+
+  return message;
+}
+
+
+function openAppointmentWhatsApp(
+  appointment
+) {
+
+  const patient =
+    getPatientByRut(
+      appointment.rut_paciente
+    );
+
+
+  if (!patient?.telefono) {
+
+    showToast(
+      "El paciente no tiene teléfono registrado.",
+      "warning"
+    );
+
+    return;
+  }
+
+
+  const phone =
+    String(patient.telefono)
+      .replace(/[^\d]/g, "");
+
+
+  const message =
+    buildAppointmentMessage(
+      appointment
+    );
+
+
+  const url =
+    `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+
+/* ============================================================
+   HISTORIAL
+============================================================ */
+
+async function openHistoryModal() {
+
+  const modal =
+    document.getElementById(
+      "historyModal"
+    );
+
+
+  const container =
+    document.getElementById(
+      "historyList"
+    );
+
+
+  modal.classList.remove("hidden");
+
+
+  container.innerHTML = `
+    <div class="p-8 text-center text-slate-400">
+      <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+      <p class="mt-2">
+        Cargando historial...
+      </p>
+    </div>
+  `;
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("atenciones")
+    .select("*")
+    .order("created_at", {
+      ascending: false
+    });
+
+
+  if (error) {
+
+    console.error(
+      "history:",
+      error
+    );
+
+    container.innerHTML = `
+      <div class="p-8 text-center text-red-500">
+        No fue posible cargar el historial.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  state.attentions =
+    data || [];
+
+
+  if (!state.attentions.length) {
+
+    container.innerHTML = `
+      <div class="p-10 text-center text-slate-400">
+        No existen atenciones registradas.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    state.attentions.map(attention => {
+
+      const patient =
+        getPatientByRut(
+          attention.rut_paciente
+        );
+
+
+      const created =
+        attention.created_at
+          ? new Date(
+              attention.created_at
+            ).toLocaleString(
+              "es-CL"
+            )
+          : "";
+
+
+      return `
+        <article
+          class="border border-slate-200 rounded-xl p-5 mb-4"
+        >
+
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-3">
+
+            <div>
+
+              <h4 class="font-bold text-slate-800">
+                ${escapeHTML(
+                  patient?.nombre ||
+                  "Paciente desconocido"
+                )}
+              </h4>
+
+              <p class="text-sm text-slate-500">
+                ${escapeHTML(
+                  attention.rut_paciente
+                )}
+              </p>
+
+            </div>
+
+
+            <div class="text-right">
+
+              <span class="inline-block px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-bold">
+                Sesión ${
+                  escapeHTML(
+                    attention.sesion_num ||
+                    "—"
+                  )
+                }
+              </span>
+
+              <p class="text-xs text-slate-400 mt-2">
+                ${escapeHTML(created)}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+
+            <div class="bg-slate-50 rounded-lg p-3">
+              <p class="text-xs text-slate-400">
+                Zona
+              </p>
+              <p class="text-sm font-semibold mt-1">
+                ${escapeHTML(
+                  attention.zona ||
+                  "—"
+                )}
+              </p>
+            </div>
+
+
+            <div class="bg-slate-50 rounded-lg p-3">
+              <p class="text-xs text-slate-400">
+                EVA inicial
+              </p>
+              <p class="text-sm font-semibold mt-1">
+                ${escapeHTML(
+                  attention.eva_inicio ??
+                  "—"
+                )}
+              </p>
+            </div>
+
+
+            <div class="bg-slate-50 rounded-lg p-3">
+              <p class="text-xs text-slate-400">
+                EVA final
+              </p>
+              <p class="text-sm font-semibold mt-1">
+                ${escapeHTML(
+                  attention.eva_fin ??
+                  "—"
+                )}
+              </p>
+            </div>
+
+          </div>
+
+
+          ${
+            attention.notas
+              ? `
+                <div class="mt-4">
+
+                  <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                    Notas
+                  </p>
+
+                  <p class="text-sm text-slate-600 whitespace-pre-line mt-1">
+                    ${escapeHTML(
+                      attention.notas
+                    )}
+                  </p>
+
+                </div>
+              `
+              : ""
+          }
+
+        </article>
+      `;
+
+    }).join("");
+}
+
+
+async function openPatientHistory(rut) {
+
+  const patient =
+    getPatientByRut(rut);
+
+
+  if (!patient) {
+    return;
+  }
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("atenciones")
+    .select("*")
+    .eq("rut_paciente", rut)
+    .order("created_at", {
+      ascending: false
+    });
+
+
+  if (error) {
+
+    showToast(
+      "No se pudo cargar el historial del paciente.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const modal =
+    document.getElementById(
+      "historyModal"
+    );
+
+
+  const container =
+    document.getElementById(
+      "historyList"
+    );
+
+
+  modal.classList.remove("hidden");
+
+
+  if (!data?.length) {
+
+    container.innerHTML = `
+      <div class="text-center p-10">
+
+        <h3 class="font-bold text-lg">
+          ${escapeHTML(patient.nombre)}
+        </h3>
+
+        <p class="text-slate-400 mt-3">
+          No registra atenciones.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML = `
+    <div class="mb-5">
+
+      <h3 class="text-xl font-bold">
+        ${escapeHTML(patient.nombre)}
+      </h3>
+
+      <p class="text-sm text-slate-500">
+        ${escapeHTML(patient.rut)}
+      </p>
+
+    </div>
+
+    ${
+      data.map(attention => {
+
+        return `
+          <article class="border border-slate-200 rounded-xl p-5 mb-4">
+
+            <div class="flex justify-between">
+
+              <span class="font-bold text-teal-700">
+                Sesión ${escapeHTML(
+                  attention.sesion_num
+                )}
+              </span>
+
+              <span class="text-xs text-slate-400">
+                ${attention.created_at
+                  ? new Date(
+                      attention.created_at
+                    ).toLocaleDateString(
+                      "es-CL"
+                    )
+                  : ""}
+              </span>
+
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-4">
+
+              <div>
+                <span class="text-xs text-slate-400">
+                  EVA inicio
+                </span>
+                <p class="font-semibold">
+                  ${escapeHTML(
+                    attention.eva_inicio ??
+                    "—"
+                  )}
+                </p>
+              </div>
+
+              <div>
+                <span class="text-xs text-slate-400">
+                  EVA final
+                </span>
+                <p class="font-semibold">
+                  ${escapeHTML(
+                    attention.eva_fin ??
+                    "—"
+                  )}
+                </p>
+              </div>
+
+            </div>
+
+            <p class="text-sm text-slate-600 mt-4">
+              ${escapeHTML(
+                attention.notas ||
+                "Sin notas."
+              )}
+            </p>
+
+          </article>
+        `;
+
+      }).join("")
+    }
+  `;
+}
+
+
+/* ============================================================
+   GRÁFICO DIARIO DEL MES
+============================================================ */
+
+async function openMonthlyChart() {
+
+  const modal =
+    document.getElementById(
+      "monthChartModal"
+    );
+
+
+  modal.classList.remove("hidden");
+
+
+  const start =
+    currentMonthStartISO();
+
+
+  const end =
+    currentMonthEndISO();
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("atenciones")
+    .select("created_at")
+    .gte(
+      "created_at",
+      `${start}T00:00:00`
+    )
+    .lte(
+      "created_at",
+      `${end}T23:59:59`
+    );
+
+
+  if (error) {
+
+    console.error(
+      "monthly chart:",
+      error
+    );
+
+    showToast(
+      "No se pudo cargar el gráfico mensual.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const now =
+    new Date();
+
+
+  const year =
+    now.getFullYear();
+
+
+  const month =
+    now.getMonth();
+
+
+  const daysInMonth =
+    new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
+
+
+  const labels = [];
+
+  const values = [];
+
+
+  for (
+    let day = 1;
+    day <= daysInMonth;
+    day++
+  ) {
+
+    labels.push(
+      String(day).padStart(2, "0")
+    );
+
+    const count =
+      (data || []).filter(
+        item => {
+
+          if (!item.created_at) {
+            return false;
+          }
+
+          const date =
+            new Date(
+              item.created_at
+            );
+
+          return (
+            date.getFullYear() === year &&
+            date.getMonth() === month &&
+            date.getDate() === day
+          );
+
+        }
+      ).length;
+
+
+    values.push(count);
+  }
+
+
+  const monthName =
+    now.toLocaleDateString(
+      "es-CL",
+      {
+        month: "long",
+        year: "numeric"
+      }
+    );
+
+
+  document
+    .getElementById(
+      "monthChartSubtitle"
+    )
+    .textContent =
+      `Atenciones diarias — ${monthName}`;
+
+
+  const canvas =
+    document.getElementById(
+      "monthlyAttentionChart"
+    );
+
+
+  if (state.monthlyChart) {
+
+    state.monthlyChart.destroy();
+
+    state.monthlyChart = null;
+  }
+
+
+  state.monthlyChart =
+    new Chart(
+      canvas,
+      {
+        type: "bar",
+
+        data: {
+
+          labels,
+
+          datasets: [
+            {
+              label: "Atenciones",
+              data: values,
+
+              borderWidth: 1,
+
+              borderRadius: 6
+            }
+          ]
+
+        },
+
+        options: {
+
+          responsive: true,
+
+          maintainAspectRatio: false,
+
+          scales: {
+
+            y: {
+
+              beginAtZero: true,
+
+              ticks: {
+                precision: 0
+              }
+
+            }
+
+          },
+
+          plugins: {
+
+            legend: {
+              display: false
+            },
+
+            tooltip: {
+              callbacks: {
+                label: context =>
+                  `${context.raw} atención(es)`
+              }
+            }
+
+          }
+
+        }
+
+      }
+    );
+}
+
+
+/* ============================================================
+   DASHBOARD MÉTRICAS
+============================================================ */
+
+async function refreshDashboardMetrics() {
+
+  /*
+    Pacientes
+  */
+
+  const {
+    count: patientCount,
+    error: patientError
+  } = await supabaseClient
+    .from("pacientes")
+    .select("*", {
+      count: "exact",
+      head: true
+    });
+
+
+  if (!patientError) {
+
+    document
+      .getElementById(
+        "metricPacientes"
+      )
+      .textContent =
+      patientCount || 0;
+  }
+
+
+  /*
+    Atenciones totales
+  */
+
+  const {
+    count: attentionCount,
+    error: attentionError
+  } = await supabaseClient
+    .from("atenciones")
+    .select("*", {
+      count: "exact",
+      head: true
+    });
+
+
+  if (!attentionError) {
+
+    document
+      .getElementById(
+        "metricAtenciones"
+      )
+      .textContent =
+      attentionCount || 0;
+  }
+
+
+  /*
+    Atenciones del mes
+  */
+
+  const {
+    count: monthCount,
+    error: monthError
+  } = await supabaseClient
+    .from("atenciones")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .gte(
+      "created_at",
+      `${currentMonthStartISO()}T00:00:00`
+    )
+    .lte(
+      "created_at",
+      `${currentMonthEndISO()}T23:59:59`
+    );
+
+
+  if (!monthError) {
+
+    document
+      .getElementById(
+        "metricMes"
+      )
+      .textContent =
+      monthCount || 0;
+  }
+
+
+  /*
+    Próximas citas.
+    MUY IMPORTANTE:
+    fecha >= HOY
+  */
+
+  const {
+    count: appointmentCount,
+    error: appointmentError
+  } = await supabaseClient
+    .from("citas")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .gte(
+      "fecha",
+      todayISO()
+    );
+
+
+  if (!appointmentError) {
+
+    document
+      .getElementById(
+        "metricCitas"
+      )
+      .textContent =
+      appointmentCount || 0;
+  }
+}
+
+
+/* ============================================================
+   MODALES
+============================================================ */
+
+function closeModal(id) {
+
+  document
+    .getElementById(id)
+    .classList.add("hidden");
+}
+
+
+function closeAllModals() {
+
+  document
+    .querySelectorAll(
+      '[id$="Modal"]'
+    )
+    .forEach(modal => {
+
+      modal.classList.add(
+        "hidden"
+      );
+
+    });
+}
+
+
+/* ============================================================
+   EVA
+============================================================ */
+
+function updateEVADisplay() {
+
+  const start =
+    document.getElementById(
+      "evaInicio"
+    ).value;
+
+
+  const end =
+    document.getElementById(
+      "evaFin"
+    ).value;
+
+
+  document
+    .getElementById(
+      "evaInicioValue"
+    )
+    .textContent =
+    start;
+
+
+  document
+    .getElementById(
+      "evaFinValue"
+    )
+    .textContent =
+    end;
+}
+
+
+/* ============================================================
+   INICIALIZACIÓN
+============================================================ */
+
+async function initializeApplication() {
+
+  try {
+
+    await Promise.all([
+      loadPatients(),
+      loadAttentions(),
+      loadDiagnoses(),
+      loadExercises(),
+      loadAppointments()
+    ]);
+
+
+    await refreshDashboardMetrics();
+
+
+    updateEVADisplay();
+
+
+    document
+      .getElementById(
+        "connectionStatus"
+      )
+      .innerHTML = `
+        <i class="fa-solid fa-circle text-[8px] mr-1"></i>
+        Conectado
+      `;
+
+
+  } catch (error) {
+
+    console.error(
+      "initializeApplication:",
+      error
+    );
+
+    document
+      .getElementById(
+        "connectionStatus"
+      )
+      .className =
+      "px-3 py-2 rounded-xl bg-red-50 text-red-700 text-sm";
+
+    document
+      .getElementById(
+        "connectionStatus"
+      )
+      .innerHTML = `
+        <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+        Error
+      `;
+
+  }
+}
+
+
+/* ============================================================
+   EVENT LISTENERS
+============================================================ */
+
+
+/* LOGIN */
+
+document
+  .getElementById("loginForm")
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      const email =
+        document
+          .getElementById("loginEmail")
+          .value
+          .trim();
+
+
+      const password =
+        document
+          .getElementById("loginPassword")
+          .value;
+
+
+      await login(
+        email,
+        password
+      );
+
+    }
+  );
+
+
+/* PASSWORD */
+
+document
+  .getElementById(
+    "togglePassword"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const input =
+        document.getElementById(
+          "loginPassword"
+        );
+
+
+      const button =
+        document.getElementById(
+          "togglePassword"
+        );
+
+
+      if (input.type === "password") {
+
+        input.type = "text";
+
+        button.innerHTML =
+          '<i class="fa-solid fa-eye-slash"></i>';
+
+      } else {
+
+        input.type = "password";
+
+        button.innerHTML =
+          '<i class="fa-solid fa-eye"></i>';
+      }
+
+    }
+  );
+
+
+/* LOGOUT */
+
+document
+  .getElementById(
+    "logoutButton"
+  )
+  .addEventListener(
+    "click",
+    logout
+  );
+
+
+/* TABS */
+
+document
+  .querySelectorAll(
+    ".tab-btn"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        openTab(
+          button.dataset.tab
+        );
+
+      }
+    );
+
+  });
+
+
+/* DASHBOARD CARDS */
+
+document
+  .getElementById(
+    "cardPacientes"
+  )
+  .addEventListener(
+    "click",
+    () => openTab("pacientes")
+  );
+
+
+document
+  .getElementById(
+    "cardAtenciones"
+  )
+  .addEventListener(
+    "click",
+    openHistoryModal
+  );
+
+
+document
+  .getElementById(
+    "cardMes"
+  )
+  .addEventListener(
+    "click",
+    openMonthlyChart
+  );
+
+
+document
+  .getElementById(
+    "cardCitas"
+  )
+  .addEventListener(
+    "click",
+    () => openTab("agenda")
+  );
+
+
+document
+  .getElementById(
+    "dashboardAgendaButton"
+  )
+  .addEventListener(
+    "click",
+    () => openTab("agenda")
+  );
+
+
+/* PATIENT SEARCH */
+
+document
+  .getElementById(
+    "patientSearch"
+  )
+  .addEventListener(
+    "input",
+    renderPatients
+  );
+
+
+/* NEW PATIENT */
+
+document
+  .getElementById(
+    "newPatientButton"
+  )
+  .addEventListener(
+    "click",
+    openPatientModal
+  );
+
+
+/* PATIENT FORM */
+
+document
+  .getElementById(
+    "patientForm"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      await savePatient();
+
+    }
+  );
+
+
+/* RUT REAL-TIME */
+
+document
+  .getElementById(
+    "patientRut"
+  )
+  .addEventListener(
+    "input",
+    event => {
+
+      const input =
+        event.target;
+
+
+      const cursorEnd =
+        input.selectionStart;
+
+
+      const formatted =
+        formatRut(
+          input.value
+        );
+
+
+      input.value =
+        formatted;
+
+
+      const message =
+        document.getElementById(
+          "rutValidationMessage"
+        );
+
+
+      if (!formatted) {
+
+        message.textContent = "";
+
+        return;
+      }
+
+
+      if (
+        formatted.length >= 7
+      ) {
+
+        if (
+          validateRut(formatted)
+        ) {
+
+          message.textContent =
+            "RUT válido.";
+
+          message.className =
+            "text-xs mt-2 min-h-[16px] text-emerald-600";
+
+        } else {
+
+          /*
+            NO usamos alert().
+            El aviso es no bloqueante.
+          */
+
+          message.textContent =
+            "Revisar dígito verificador.";
+
+          message.className =
+            "text-xs mt-2 min-h-[16px] text-amber-600";
+
+        }
+
+      } else {
+
+        message.textContent = "";
+
+      }
+
+    }
+  );
+
+
+/* ATTENTION SEARCH */
+
+document
+  .getElementById(
+    "attentionPatientSearch"
+  )
+  .addEventListener(
+    "input",
+    searchAttentionPatients
+  );
+
+
+document
+  .getElementById(
+    "attentionPatientSearch"
+  )
+  .addEventListener(
+    "focus",
+    () => {
+
+      const value =
+        document
+          .getElementById(
+            "attentionPatientSearch"
+          )
+          .value
+          .trim();
+
+      if (value) {
+        searchAttentionPatients();
+      }
+
+    }
+  );
+
+
+/* CLICK OUTSIDE AUTOCOMPLETE */
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const search =
+      document.getElementById(
+        "attentionPatientSearch"
+      );
+
+    const results =
+      document.getElementById(
+        "attentionPatientResults"
+      );
+
+
+    if (
+      !search.contains(event.target) &&
+      !results.contains(event.target)
+    ) {
+
+      results.classList.add(
+        "hidden"
+      );
+    }
+
+  }
+);
+
+
+/* ATTENTION FORM */
+
+document
+  .getElementById(
+    "attentionForm"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      await saveAttention();
+
+    }
+  );
+
+
+/* CLEAR ATTENTION */
+
+document
+  .getElementById(
+    "clearAttentionButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "attentionForm"
+        )
+        .reset();
+
+
+      document
+        .getElementById(
+          "attentionPatientRut"
+        )
+        .value = "";
+
+
+      state.selectedAttentionRut =
+        "";
+
+
+      document
+        .getElementById(
+          "selectedPatientBadge"
+        )
+        .classList.add(
+          "hidden"
+        );
+
+
+      document
+        .getElementById(
+          "saveAttentionButton"
+        )
+        .disabled = true;
+
+
+      updateEVADisplay();
+
+    }
+  );
+
+
+/* EVA */
+
+document
+  .getElementById(
+    "evaInicio"
+  )
+  .addEventListener(
+    "input",
+    updateEVADisplay
+  );
+
+
+document
+  .getElementById(
+    "evaFin"
+  )
+  .addEventListener(
+    "input",
+    updateEVADisplay
+  );
+
+
+/* AGENDA */
+
+document
+  .getElementById(
+    "newAppointmentButton"
+  )
+  .addEventListener(
+    "click",
+    openAppointmentModal
+  );
+
+
+document
+  .getElementById(
+    "appointmentForm"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      await saveAppointment();
+
+    }
+  );
+
+
+document
+  .getElementById(
+    "agendaSearch"
+  )
+  .addEventListener(
+    "input",
+    renderAppointments
+  );
+
+
+document
+  .getElementById(
+    "agendaDateFilter"
+  )
+  .addEventListener(
+    "change",
+    renderAppointments
+  );
+
+
+document
+  .getElementById(
+    "clearAgendaFilter"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      document
+        .getElementById(
+          "agendaSearch"
+        )
+        .value = "";
+
+
+      document
+        .getElementById(
+          "agendaDateFilter"
+        )
+        .value = "";
+
+
+      renderAppointments();
+
+    }
+  );
+
+
+/* EXERCISES */
+
+document
+  .getElementById(
+    "newExerciseButton"
+  )
+  .addEventListener(
+    "click",
+    openExerciseModal
+  );
+
+
+document
+  .getElementById(
+    "exerciseSearch"
+  )
+  .addEventListener(
+    "input",
+    renderExercises
+  );
+
+
+document
+  .getElementById(
+    "exerciseForm"
+  )
+  .addEventListener(
+    "submit",
+    async event => {
+
+      event.preventDefault();
+
+      await saveExercise();
+
+    }
+  );
+
+
+/* CLOSE MODALS */
+
+document
+  .querySelectorAll(
+    "[data-close-modal]"
+  )
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        closeModal(
+          button.dataset.closeModal
+        );
+
+      }
+    );
+
+  });
+
+
+/* CLICK BACKDROP */
+
+document
+  .querySelectorAll(
+    '[id$="Modal"]'
+  )
+  .forEach(modal => {
+
+    modal.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target === modal
+        ) {
+
+          modal.classList.add(
+            "hidden"
+          );
+
+        }
+
+      }
+    );
+
+  });
+
+
+/* ESC */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Escape") {
+
+      closeAllModals();
+
+    }
+
+  }
+);
+
+
+/* MOBILE MENU */
+
+document
+  .getElementById(
+    "mobileMenuButton"
+  )
+  .addEventListener(
+    "click",
+    () => {
+
+      const sidebar =
+        document.getElementById(
+          "sidebar"
+        );
+
+
+      if (
+        sidebar.style.display ===
+        "flex"
+      ) {
+
+        sidebar.style.display =
+          "none";
+
+      } else {
+
+        sidebar.style.display =
+          "flex";
+
+        sidebar.style.position =
+          "fixed";
+
+        sidebar.style.width =
+          "280px";
+
+      }
+
+    }
+  );
+
+
+/* ============================================================
+   START
+============================================================ */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+
+    await checkSession();
+
+  }
+);
+
 </script>
+
 </body>
 </html>
