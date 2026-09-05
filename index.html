@@ -67,6 +67,10 @@
       <a href="#servicios" class="hover:text-teal-400 transition">Servicios</a>
       <a href="#metodo" class="hover:text-teal-400 transition">Nuestro enfoque</a>
       <a href="#contacto" class="hover:text-teal-400 transition">Contacto</a>
+      <!-- Teléfono rápido visible en el menú superior -->
+      <a href="tel:+56942183583" class="flex items-center gap-2 text-teal-300 hover:text-white transition font-semibold">
+        <i class="fa-solid fa-phone"></i> +56 9 4218 3583
+      </a>
       <a href="app.html" class="bg-teal-600 hover:bg-teal-500 px-4 py-2.5 rounded-xl text-white font-bold transition">
         <i class="fa-solid fa-lock mr-2"></i>Panel clínico
       </a>
@@ -81,6 +85,9 @@
     <a onclick="toggleMobileNav()" href="#servicios" class="block py-3 text-slate-300">Servicios</a>
     <a onclick="toggleMobileNav()" href="#metodo" class="block py-3 text-slate-300">Nuestro enfoque</a>
     <a onclick="toggleMobileNav()" href="#contacto" class="block py-3 text-slate-300">Contacto</a>
+    <a href="tel:+56942183583" class="block py-3 text-teal-400 font-semibold flex items-center gap-2">
+      <i class="fa-solid fa-phone"></i> Llamar al +56 9 4218 3583
+    </a>
     <a href="app.html" class="block py-3 text-teal-400 font-bold">Acceso profesional</a>
   </div>
 </nav>
@@ -100,15 +107,16 @@
       Evaluación, rehabilitación funcional y seguimiento de tu evolución con objetivos claros y acorde a tus objetivos. Medicion del dolor y recuperacion sesión a sesión
     </p>
 
+    <!-- Botones de Acción Principal con Teléfono y WhatsApp -->
     <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
       <a href="https://wa.me/56942183583?text=Hola%20Klgo.%20Cristian%2C%20quisiera%20agendar%20una%20evaluaci%C3%B3n%20kin%C3%A9sica."
          target="_blank" rel="noopener"
          class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-6 py-3.5 rounded-2xl shadow-xl transition hover:-translate-y-0.5">
-        <i class="fa-brands fa-whatsapp mr-2"></i>Agendar por WhatsApp
+        <i class="fa-brands fa-whatsapp mr-2 text-lg"></i>Agendar por WhatsApp
       </a>
-      <a href="#servicios"
-         class="bg-slate-950/60 hover:bg-slate-950 border border-white/20 text-white font-bold px-6 py-3.5 rounded-2xl transition">
-        <i class="fa-solid fa-stethoscope text-teal-300 mr-2"></i>Conocer servicios
+      <a href="tel:+56942183583"
+         class="bg-slate-950/60 hover:bg-slate-950 border border-white/20 text-white font-bold px-6 py-3.5 rounded-2xl transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-phone text-teal-300"></i> Llámanos: +56 9 4218 3583
       </a>
     </div>
 
@@ -205,20 +213,31 @@
       <span class="text-teal-200 text-xs font-bold uppercase tracking-widest">¿Listo para comenzar?</span>
       <h2 class="mt-2 font-heading font-bold text-2xl sm:text-4xl">Agenda tu evaluación kinésica</h2>
       <p class="mt-3 text-sm text-slate-200 max-w-xl mx-auto">
-        Escríbenos por WhatsApp para coordinar día y hora.
+        Comunícate por WhatsApp o llama directamente para coordinar tu hora.
       </p>
-      <a href="https://wa.me/56942183583?text=Hola%20Klgo.%20Cristian%2C%20quisiera%20agendar%20una%20evaluaci%C3%B3n%20kin%C3%A9sica."
-         target="_blank" rel="noopener"
-         class="inline-flex mt-6 items-center bg-white text-teal-800 font-bold px-6 py-3 rounded-xl hover:bg-teal-50 transition">
-        <i class="fa-brands fa-whatsapp text-lg mr-2"></i>Contactar por WhatsApp
-      </a>
+      
+      <!-- Opciones de contacto duales en la sección final -->
+      <div class="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+        <a href="https://wa.me/56942183583?text=Hola%20Klgo.%20Cristian%2C%20quisiera%20agendar%20una%20evaluaci%C3%B3n%20kin%C3%A9sica."
+           target="_blank" rel="noopener"
+           class="inline-flex items-center justify-center bg-white text-teal-800 font-bold px-6 py-3.5 rounded-xl hover:bg-teal-50 transition shadow-lg">
+          <i class="fa-brands fa-whatsapp text-lg mr-2"></i>Contactar por WhatsApp
+        </a>
+        <a href="tel:+56942183583"
+           class="inline-flex items-center justify-center bg-slate-950/50 hover:bg-slate-950 border border-white/20 text-white font-bold px-6 py-3.5 rounded-xl transition shadow-lg">
+          <i class="fa-solid fa-phone text-teal-300 mr-2"></i>Llamar al +56 9 4218 3583
+        </a>
+      </div>
     </div>
   </section>
 </main>
 
 <footer class="bg-slate-950 text-slate-500 border-t border-slate-900 py-8 px-4 text-center text-xs">
-  <p>© 2026 CyJ Kinesiología — Klgo. Cristian Barrera Pinto.</p>
-  <a href="app.html" class="inline-block mt-2 text-teal-400 hover:underline">Acceso profesional a la PWA</a>
+  <p>© 2026 Kine Barrera Kinesiología — Klgo. Cristian Barrera Pinto.</p>
+  <div class="mt-2 flex justify-center gap-4">
+    <a href="tel:+56942183583" class="text-slate-400 hover:text-teal-400 transition"><i class="fa-solid fa-phone mr-1"></i> +56 9 4218 3583</a>
+    <a href="app.html" class="text-teal-400 hover:underline">Acceso profesional a la PWA</a>
+  </div>
 </footer>
 
 <script>
