@@ -13,6 +13,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Google Model Viewer -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -46,6 +49,98 @@
         center/cover no-repeat;
     }
     .glass { backdrop-filter: blur(14px); }
+
+    /* Estilos de los Hotspots 3D */
+    .hotspot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      background: rgba(15, 23, 42, 0.90);
+      border: 1px solid #14b8a6;
+      box-shadow: 0 0 15px rgba(20, 184, 166, 0.35);
+      cursor: pointer;
+      user-select: none;
+      transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    }
+
+    .hotspot:hover {
+      transform: scale(1.12);
+      background: #0f766e;
+      box-shadow: 0 0 20px rgba(45, 212, 191, 0.6);
+    }
+
+    .hotspot.is-hidden {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transform: scale(0.6) !important;
+      box-shadow: none !important;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #2dd4bf;
+      border-radius: 50%;
+      animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(45, 212, 191, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); }
+    }
+
+    /* Puntos de "detalle" (sólo visibles al hacer zoom) */
+    .hotspot.detail-spot {
+      border-color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    }
+    .hotspot.detail-spot:hover {
+      background: #0369a1;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+    }
+    .hotspot.detail-spot .pulse-dot {
+      background-color: #38bdf8;
+      animation: pulse-cyan 1.6s infinite;
+    }
+    @keyframes pulse-cyan {
+      0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+      70% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+    }
+
+    #zoomBadge {
+      transition: opacity 0.35s ease;
+    }
+
+    .progress-bar {
+      display: block;
+      width: 70%;
+      height: 6px;
+      max-width: 200px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      overflow: hidden;
+      transition: opacity 0.3s ease;
+    }
+    .progress-bar.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .progress-bar .update-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #14b8a6, #2dd4bf);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
   </style>
 </head>
 
@@ -199,6 +294,202 @@
     </div>
   </section>
 
+  <!-- Sección Interactiva 3D del Cuerpo Humano -->
+  <section id="selector-3d" class="py-16 sm:py-24 bg-slate-950 text-white px-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-teal-400 font-bold text-xs uppercase tracking-widest">Interactiva</span>
+        <h2 class="mt-2 font-heading font-bold text-3xl sm:text-4xl">Selecciona tu zona de molestia</h2>
+        <p class="mt-3 text-sm sm:text-base text-slate-400">
+          Gira la figura 3D en 360° para ubicar el área afectada. Al seleccionarla, podrás coordinar tu atención con el foco preciso.
+        </p>
+      </div>
+
+      <div class="bg-slate-900/85 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur flex flex-col md:flex-row items-center gap-8 relative">
+        
+        <!-- Visor 3D -->
+        <div class="w-full md:w-1/2 h-[520px] relative bg-slate-950/60 rounded-2xl overflow-hidden border border-slate-800">
+          
+          <div class="absolute top-4 left-4 z-10 bg-teal-500/10 text-teal-400 border border-teal-500/30 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-2 pointer-events-none">
+            <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+            Gira 360° y selecciona tu molestia
+          </div>
+
+          <!-- Badge que avisa cuando el zoom reveló puntos de mayor detalle -->
+          <div id="zoomBadge" class="absolute top-4 right-4 z-10 bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[11px] font-semibold px-3 py-1.5 rounded-full flex items-center gap-2 pointer-events-none opacity-0">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            Modo detalle activado
+          </div>
+
+          <!-- Botones que controlan explícitamente la vista y los hotspots de forma limpia -->
+          <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-2 bg-slate-900/90 p-1.5 rounded-xl border border-slate-700 backdrop-blur">
+            <button id="btnFrente" type="button" onclick="cambiarVista('frente')" class="px-3 py-1 text-xs font-bold rounded-lg bg-teal-600 text-white transition">
+              Frente
+            </button>
+            <button id="btnEspalda" type="button" onclick="cambiarVista('espalda')" class="px-3 py-1 text-xs font-bold rounded-lg bg-teal-600/30 text-teal-300 hover:bg-teal-600 hover:text-white transition">
+              Espalda
+            </button>
+          </div>
+
+          <model-viewer 
+            id="anatomiaViewer"
+            src="modelo.glb" 
+            alt="Modelo Anatómico Humano 3D" 
+            auto-rotate
+            auto-rotate-delay="0"
+            rotation-per-second="18deg"
+            interaction-prompt="none"
+            camera-controls 
+            bounds="tight"
+            shadow-intensity="1"
+            shadow-softness="1"
+            camera-orbit="0deg 75deg auto"
+            min-camera-orbit="auto 50deg 32%"
+            max-camera-orbit="auto 105deg 180%"
+            camera-target="0m 0.88m 0m"
+            field-of-view="35deg"
+            class="w-full h-full">
+
+            <!-- Barra de progreso de carga -->
+            <div slot="progress-bar" class="progress-bar hide" id="progressBar">
+              <div class="update-bar" id="updateBar"></div>
+            </div>
+
+            <!-- PUNTOS FRONTALES -->
+            <button class="hotspot front-spot" slot="hotspot-cuello" data-position="0 1.55 0.08" onclick="seleccionarZona('Columna Cervical')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Cervical</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-hombro-d" data-position="-0.22 1.40 0.05" onclick="seleccionarZona('Hombro Derecho')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Hombro D.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-hombro-i" data-position="0.22 1.40 0.05" onclick="seleccionarZona('Hombro Izquierdo')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Hombro I.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-codo-d" data-position="-0.32 1.15 0.03" onclick="seleccionarZona('Codo Derecho')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Codo D.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-codo-i" data-position="0.32 1.15 0.03" onclick="seleccionarZona('Codo Izquierdo')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Codo I.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-cadera" data-position="0 0.95 0.10" onclick="seleccionarZona('Cadera / Pelvis')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Cadera</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-rodilla-d" data-position="-0.12 0.52 0.09" onclick="seleccionarZona('Rodilla Derecha')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Rodilla D.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-rodilla-i" data-position="0.12 0.52 0.09" onclick="seleccionarZona('Rodilla Izquierda')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Rodilla I.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-tobillo-d" data-position="-0.11 0.12 0.06" onclick="seleccionarZona('Tobillo Derecho')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Tobillo D.</span>
+            </button>
+
+            <button class="hotspot front-spot" slot="hotspot-tobillo-i" data-position="0.11 0.12 0.06" onclick="seleccionarZona('Tobillo Izquierdo')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Tobillo I.</span>
+            </button>
+
+            <!-- PUNTOS TRASEROS -->
+            <button class="hotspot back-spot is-hidden" slot="hotspot-dorsal" data-position="0 1.30 -0.11" onclick="seleccionarZona('Columna Dorsal / Escápulas')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Dorsal</span>
+            </button>
+
+            <button class="hotspot back-spot is-hidden" slot="hotspot-lumbar" data-position="0 1.05 -0.10" onclick="seleccionarZona('Columna Lumbar')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Lumbar</span>
+            </button>
+
+            <button class="hotspot back-spot is-hidden" slot="hotspot-gluteo" data-position="0 0.88 -0.12" onclick="seleccionarZona('Glúteo / Sacro')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Glúteos</span>
+            </button>
+
+            <!-- PUNTOS DE DETALLE: sólo aparecen al hacer zoom -->
+            <button class="hotspot front-spot detail-spot is-hidden" slot="hotspot-antebrazo-d" data-position="-0.30 0.95 0.02" onclick="seleccionarZona('Antebrazo Derecho')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Antebrazo D.</span>
+            </button>
+
+            <button class="hotspot front-spot detail-spot is-hidden" slot="hotspot-antebrazo-i" data-position="0.30 0.95 0.02" onclick="seleccionarZona('Antebrazo Izquierdo')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Antebrazo I.</span>
+            </button>
+
+            <button class="hotspot front-spot detail-spot is-hidden" slot="hotspot-muneca-d" data-position="-0.27 0.78 0.02" onclick="seleccionarZona('Muñeca Derecha')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Muñeca D.</span>
+            </button>
+
+            <button class="hotspot front-spot detail-spot is-hidden" slot="hotspot-muneca-i" data-position="0.27 0.78 0.02" onclick="seleccionarZona('Muñeca Izquierda')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Muñeca I.</span>
+            </button>
+
+            <button class="hotspot back-spot detail-spot is-hidden" slot="hotspot-trapecio" data-position="0 1.58 -0.09" onclick="seleccionarZona('Trapecio / Cuello Alto')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Trapecio</span>
+            </button>
+
+            <button class="hotspot back-spot detail-spot is-hidden" slot="hotspot-isquios" data-position="0 0.68 -0.11" onclick="seleccionarZona('Isquiotibiales')">
+              <div class="pulse-dot"></div>
+              <span class="text-[11px] font-bold text-white">Isquiotibiales</span>
+            </button>
+
+          </model-viewer>
+        </div>
+
+        <!-- Panel de Selección y Envío a WhatsApp -->
+        <div class="w-full md:w-1/2 flex flex-col justify-center">
+          <span class="text-teal-400 text-xs font-bold uppercase tracking-widest">Paso a paso</span>
+          <h3 class="text-2xl font-extrabold text-white mt-1">¿Qué zona te molesta?</h3>
+          <p class="text-slate-400 text-xs sm:text-sm mt-3 leading-relaxed">
+            Haz clic o toca el punto en la figura 3D para registrar la zona afectada y continuar directo hacia la coordinación de tu hora. Tip: acércate con scroll o pellizco para descubrir puntos de mayor detalle.
+          </p>
+
+          <div class="mt-6 p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Zona seleccionada</label>
+              <input 
+                id="zonaSeleccionada" 
+                type="text" 
+                readonly 
+                value="Selecciona un punto en el modelo 3D..." 
+                class="w-full bg-slate-900 border border-slate-700 text-teal-300 font-bold px-4 py-3 rounded-xl text-sm focus:outline-none cursor-default">
+            </div>
+
+            <a 
+              id="btnAgendarZona"
+              href="#"
+              target="_blank" rel="noopener"
+              class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2 pointer-events-none opacity-40">
+              <i class="fa-brands fa-whatsapp text-base"></i>
+              <span>Agendar zona por WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <section id="contacto" class="py-16 sm:py-20 px-4">
     <div class="max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-teal-700 to-slate-900 text-white p-7 sm:p-10 shadow-2xl text-center">
       <span class="text-teal-200 text-xs font-bold uppercase tracking-widest">¿Comenzamos?</span>
@@ -235,6 +526,165 @@
     icon.className = nav.classList.contains('hidden')
       ? 'fa-solid fa-bars text-xl'
       : 'fa-solid fa-xmark text-xl';
+  }
+
+  const viewer = document.getElementById('anatomiaViewer');
+  const btnFrente = document.getElementById('btnFrente');
+  const btnEspalda = document.getElementById('btnEspalda');
+  const zoomBadge = document.getElementById('zoomBadge');
+
+  // Ajustado al modelo real (.glb): Frente exacto a 0deg y Espalda a 180deg
+  const FRONT_ORBIT = '0deg 75deg auto';
+  const BACK_ORBIT  = '180deg 75deg auto';
+
+  const RESUME_DELAY_MS   = 7000; 
+  const ZOOM_RATIO_ACTIVA = 0.68; 
+
+  let defaultRadius = null;   
+  let resumeTimer = null;     
+
+  if (viewer) {
+
+    viewer.addEventListener('progress', (event) => {
+      const progressBar = document.getElementById('progressBar');
+      const updateBar = document.getElementById('updateBar');
+      if (!progressBar || !updateBar) return;
+      const pct = event.detail.totalProgress * 100;
+      updateBar.style.width = pct + '%';
+      progressBar.classList.toggle('hide', event.detail.totalProgress === 1);
+    });
+
+    viewer.addEventListener('load', () => {
+      const orbit = viewer.getCameraOrbit();
+      defaultRadius = orbit.radius;
+      actualizarHotspots();
+    });
+
+    viewer.addEventListener('camera-change', (event) => {
+      actualizarHotspots();
+
+      if (event.detail && event.detail.source === 'user-interaction') {
+        armarReanudacion();
+      }
+    });
+
+    if ('IntersectionObserver' in window) {
+      let giraba = true;
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) {
+            giraba = viewer.hasAttribute('auto-rotate');
+            viewer.removeAttribute('auto-rotate');
+          } else if (giraba) {
+            viewer.setAttribute('auto-rotate', '');
+          }
+        });
+      }, { threshold: 0.15 });
+      observer.observe(viewer);
+    }
+  }
+
+  function normalizarThetaGrados(thetaRad) {
+    let grados = (thetaRad * 180) / Math.PI;
+    grados = grados % 360;
+    if (grados < 0) grados += 360;
+    return grados;
+  }
+
+  function actualizarHotspots() {
+    if (!viewer) return;
+    const orbit = viewer.getCameraOrbit();
+    const thetaGrados = normalizarThetaGrados(orbit.theta);
+
+    // Frente = arco (-90°, 90°) · Espalda = arco (90°, 270°)
+    const esFrente = thetaGrados < 90 || thetaGrados > 270;
+
+    const zoomActivo = defaultRadius
+      ? orbit.radius < defaultRadius * ZOOM_RATIO_ACTIVA
+      : false;
+
+    document.querySelectorAll('.hotspot').forEach(el => {
+      const esDeFrente = el.classList.contains('front-spot');
+      const esDeEspalda = el.classList.contains('back-spot');
+      const esDetalle = el.classList.contains('detail-spot');
+
+      const coincideZona = (esFrente && esDeFrente) || (!esFrente && esDeEspalda);
+      const debeMostrarse = coincideZona && (!esDetalle || zoomActivo);
+
+      el.classList.toggle('is-hidden', !debeMostrarse);
+    });
+
+    if (btnFrente && btnEspalda) {
+      btnFrente.classList.toggle('bg-teal-600', esFrente);
+      btnFrente.classList.toggle('text-white', esFrente);
+      btnFrente.classList.toggle('bg-teal-600/30', !esFrente);
+      btnFrente.classList.toggle('text-teal-300', !esFrente);
+
+      btnEspalda.classList.toggle('bg-teal-600', !esFrente);
+      btnEspalda.classList.toggle('text-white', !esFrente);
+      btnEspalda.classList.toggle('bg-teal-600/30', esFrente);
+      btnEspalda.classList.toggle('text-teal-300', esFrente);
+    }
+
+    if (zoomBadge) {
+      zoomBadge.classList.toggle('opacity-0', !zoomActivo);
+    }
+  }
+
+  function armarReanudacion() {
+    if (!viewer) return;
+    viewer.removeAttribute('auto-rotate');
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => {
+      const orbit = viewer.getCameraOrbit();
+      const thetaGrados = (orbit.theta * 180) / Math.PI;
+      viewer.cameraOrbit = `${thetaGrados}deg 75deg auto`;
+      viewer.setAttribute('auto-rotate', '');
+    }, RESUME_DELAY_MS);
+  }
+
+  function cambiarVista(tipo) {
+    if (!viewer) return;
+
+    clearTimeout(resumeTimer);
+    viewer.removeAttribute('auto-rotate');
+    viewer.cameraOrbit = (tipo === 'espalda') ? BACK_ORBIT : FRONT_ORBIT;
+
+    document.querySelectorAll('.hotspot').forEach(el => {
+      const esDeFrente = el.classList.contains('front-spot');
+      const esDeEspalda = el.classList.contains('back-spot');
+      const esDetalle = el.classList.contains('detail-spot');
+      const coincideZona = (tipo !== 'espalda' && esDeFrente) || (tipo === 'espalda' && esDeEspalda);
+      el.classList.toggle('is-hidden', !(coincideZona && !esDetalle));
+    });
+
+    if (btnFrente && btnEspalda) {
+      const esFrente = (tipo !== 'espalda');
+      btnFrente.classList.toggle('bg-teal-600', esFrente);
+      btnFrente.classList.toggle('text-white', esFrente);
+      btnFrente.classList.toggle('bg-teal-600/30', !esFrente);
+      btnFrente.classList.toggle('text-teal-300', !esFrente);
+      btnEspalda.classList.toggle('bg-teal-600', !esFrente);
+      btnEspalda.classList.toggle('text-white', !esFrente);
+      btnEspalda.classList.toggle('bg-teal-600/30', esFrente);
+      btnEspalda.classList.toggle('text-teal-300', esFrente);
+    }
+
+    armarReanudacion();
+  }
+
+  function seleccionarZona(zona) {
+    const input = document.getElementById('zonaSeleccionada');
+    const btnAgendar = document.getElementById('btnAgendarZona');
+
+    if (input) input.value = zona;
+    if (btnAgendar) {
+      btnAgendar.classList.remove('pointer-events-none', 'opacity-40');
+      btnAgendar.href = `https://wa.me/56942183583?text=${encodeURIComponent('Hola Klgo. Cristian, quisiera agendar una evaluación para la zona: ' + zona)}`;
+      btnAgendar.querySelector('span').textContent = 'Agendar por WhatsApp: ' + zona;
+    }
+
+    armarReanudacion();
   }
 </script>
 </body>
