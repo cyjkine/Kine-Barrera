@@ -490,6 +490,87 @@
     </div>
   </section>
 
+<!-- Sección de Preguntas Frecuentes (FAQ) y Ubicación -->
+  <section id="faq-ubicacion" class="py-16 sm:py-24 px-4 bg-slate-900 text-white">
+    <div class="max-w-6xl mx-auto space-y-20">
+      
+      <!-- FAQ -->
+      <div>
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <span class="text-teal-400 font-bold text-xs uppercase tracking-widest">Resolvemos tus dudas</span>
+          <h2 class="mt-2 font-heading font-bold text-3xl sm:text-4xl">Preguntas frecuentes</h2>
+          <p class="mt-3 text-sm sm:text-base text-slate-300">
+            Todo lo que necesitas saber antes de tu primera sesión de evaluación y recuperación.
+          </p>
+        </div>
+
+        <div class="max-w-4xl mx-auto space-y-4">
+          <!-- Pregunta 1 -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden transition">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-bold text-base text-slate-200 hover:text-teal-400 transition">
+              <span>¿Necesito una orden médica previa para agendar mi evaluación?</span>
+              <i class="fa-solid fa-chevron-down text-teal-400 transition-transform duration-300"></i>
+            </button>
+            <div class="faq-content hidden px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
+              No necesariamente. Puedes venir a una evaluación kinésica inicial de forma directa para identificar el origen de tu molestia. Si ya cuentas con exámenes o una orden de tu médico, puedes traerlos el día de la cita para complementar el diagnóstico.
+            </div>
+          </div>
+
+          <!-- Pregunta 2 -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden transition">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-bold text-base text-slate-200 hover:text-teal-400 transition">
+              <span>¿Qué debo llevar o vestir para la sesión?</span>
+              <i class="fa-solid fa-chevron-down text-teal-400 transition-transform duration-300"></i>
+            </button>
+            <div class="faq-content hidden px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
+              Te recomendamos asistir con ropa cómoda y holgada que permita mover la zona afectada con facilidad (por ejemplo, polera y buzo deportivo).
+            </div>
+          </div>
+
+          <!-- Pregunta 3 -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-2xl overflow-hidden transition">
+            <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between p-5 text-left font-bold text-base text-slate-200 hover:text-teal-400 transition">
+              <span>¿Cómo se realizan los pagos y el agendamiento?</span>
+              <i class="fa-solid fa-chevron-down text-teal-400 transition-transform duration-300"></i>
+            </button>
+            <div class="faq-content hidden px-5 pb-5 text-sm text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
+              Todo el proceso de coordinación y reserva de hora se gestiona de forma directa y rápida a través de WhatsApp, asegurando el horario que mejor se adapte a tu rutina.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Google Maps Ubicación -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-slate-950/40 border border-slate-800/80 p-6 sm:p-8 rounded-3xl">
+        <div class="space-y-4">
+          <span class="text-teal-400 font-bold text-xs uppercase tracking-widest">¿Dónde nos encontramos?</span>
+          <h3 class="font-heading font-bold text-2xl sm:text-3xl text-white">Centro de Atención en Calama</h3>
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            Atención profesional en un espacio cómodo y equipado para tu recuperación kinésica. Agenda tu visita previamente para brindarte la mejor atención sin esperas.
+          </p>
+          <div class="flex items-center gap-3 text-slate-300 text-sm pt-2">
+            <i class="fa-solid fa-location-dot text-teal-400 text-lg"></i>
+            <span>Calama, Región de Antofagasta, Chile</span>
+          </div>
+        </div>
+        
+        <!-- Mapa incorporado con la ubicación exacta -->
+        <div class="w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-slate-800 shadow-lg">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3687.352288011464!2d-68.9496522!3d-22.4533921!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x96ac09a231aa4bbd%3A0x4cee839de0dc94d4!2sPinto%20Ahumada%20Eduvina!5e0!3m2!1ses-419!2scl!4v1789048746301!5m2!1ses-419!2scl" 
+            width="100%" 
+            height="100%" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            referrerpolicy="strict-origin-when-cross-origin">
+          </iframe>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <section id="contacto" class="py-16 sm:py-20 px-4">
     <div class="max-w-4xl mx-auto rounded-3xl bg-gradient-to-br from-teal-700 to-slate-900 text-white p-7 sm:p-10 shadow-2xl text-center">
       <span class="text-teal-200 text-xs font-bold uppercase tracking-widest">¿Comenzamos?</span>
@@ -685,6 +766,18 @@
     }
 
     armarReanudacion();
+  }
+  function toggleFaq(button) {
+    const content = button.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    // Alterna la visibilidad del contenido
+    content.classList.toggle('hidden');
+    
+    // Rota la flechita si existe
+    if (icon) {
+      icon.classList.toggle('rotate-180');
+    }
   }
 </script>
 </body>
