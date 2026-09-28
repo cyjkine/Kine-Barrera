@@ -1140,27 +1140,25 @@
 
         <div class="bg-white rounded-3xl max-w-lg w-full max-h-[92vh] overflow-y-auto shadow-2xl">
 
-            <div class="p-5 border-b border-slate-100 flex justify-between">
-
+           <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                 <div>
-
-                    <h3 class="font-heading font-bold text-lg">
-                        Nuevo Paciente
+                    <h3 id="patientChartTitle"
+                        class="font-heading font-bold text-lg">
+                        Evolución del paciente
                     </h3>
-
-                    <p class="text-xs text-slate-500 mt-1">
-                        Registro de ficha básica.
+                    <p id="patientChartSubtitle"
+                       class="text-xs text-slate-500">
                     </p>
-
                 </div>
-
-                <button onclick="closeNewPatientModal()"
-                        class="text-slate-400 hover:text-slate-700">
-
-                    <i class="fa-solid fa-xmark text-lg"></i>
-
-                </button>
-
+                <div class="flex items-center gap-2">
+                    <button onclick="exportPatientChartPDF()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf text-red-600"></i> Exportar PDF
+                    </button>
+                    <button onclick="closePatientChartDetail()"
+                            class="text-slate-400 hover:text-slate-700">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
             </div>
 
 
@@ -1589,7 +1587,7 @@
 
                 </div>
 
-                <button onclick="closePatientChartDetail()"
+                <button onclick="tChartDetail()"
                         class="text-slate-400">
 
                     <i class="fa-solid fa-xmark text-lg"></i>
@@ -3568,7 +3566,159 @@
             );
         }
 
+function exportPatientChartPDF() {
+            const title = $('patientChartTitle').textContent;
+            const subtitle = $('patientChartSubtitle').textContent;
+            const historyHtml = $('patientHistoryContainer').innerHTML;
 
+            const patientRut = subtitle.split('·')[0].trim();
+            const patient = allPatients.find(p => cleanRut(p.rut) === cleanRut(patientRut)) || {};
+
+            const age = calculateAge(patient.fecha_nacimiento);
+            const birthFormatted = patient.fecha_nacimiento ? formatDateCL(patient.fecha_nacimiento) : 'No especificada';
+            const phone = patient.telefono || 'No especificado';
+            const diagnosis = patient.diagnostico || 'No especificado';
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Ficha Clínica - ${escapeHtml(patient.nombre || title)}</title>
+                    <style>
+                        body { 
+                            font-family: 'Inter', Arial, sans-serif; 
+                            padding: 30px; 
+                            color: #1e293b; 
+                            max-width: 800px; 
+                            margin: 0 auto;
+                            font-size: 13px;
+                            line-height: 1.5;
+                        }
+                        .header-container {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            border-bottom: 2px solid #0f766e;
+                            padding-bottom: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .logo-area h1 {
+                            font-size: 20px;
+                            color: #0f766e;
+                            margin: 0;
+                            font-weight: 800;
+                        }
+                        .logo-area p {
+                            font-size: 11px;
+                            color: #64748b;
+                            margin: 2px 0 0 0;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                        }
+                        .clinic-info {
+                            text-align: right;
+                            font-size: 11px;
+                            color: #475569;
+                        }
+                        .patient-box {
+                            background: #f8fafc;
+                            border: 1px solid #cbd5e1;
+                            border-radius: 10px;
+                            padding: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .patient-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 8px;
+                            font-size: 12px;
+                        }
+                        .patient-grid div strong {
+                            color: #334155;
+                        }
+                        h2 {
+                            font-size: 15px;
+                            color: #0f766e;
+                            border-bottom: 1px solid #e2e8f0;
+                            padding-bottom: 5px;
+                            margin-top: 25px;
+                            margin-bottom: 15px;
+                        }
+                        .border { border: 1px solid #cbd5e1 !important; }
+                        .rounded-xl { border-radius: 8px !important; }
+                        .p-3 { padding: 12px !important; }
+                        .bg-white { background-color: #ffffff !important; }
+                        .mb-2 { margin-bottom: 10px !important; }
+                        .mt-2 { margin-top: 8px !important; }
+                        .flex { display: flex !important; }
+                        .justify-between { justify-content: space-between !important; }
+                        .font-bold { font-weight: bold !important; }
+                        .text-xs { font-size: 12px !important; }
+                        .text-sm { font-size: 14px !important; }
+                        .text-teal-700 { color: #0f766e !important; }
+                        .text-slate-500 { color: #64748b !important; }
+                        .text-slate-600 { color: #475569 !important; }
+                        .text-slate-700 { color: #334155 !important; }
+                        .text-right { text-align: right !important; }
+                        
+                        footer {
+                            margin-top: 40px;
+                            border-top: 1px solid #cbd5e1;
+                            padding-top: 15px;
+                            text-align: center;
+                            font-size: 11px;
+                            color: #64748b;
+                        }
+                        @media print {
+                            body { padding: 10px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-container">
+                        <div class="logo-area">
+                            <h1>KINE BARRERA KINESIOLOGÍA</h1>
+                            <p>Klgo. Cristian Barrera Pinto — Licenciado en Rehabilitación</p>
+                        </div>
+                        <div class="clinic-info">
+                            <strong>Fecha de emisión:</strong> ${new Date().toLocaleDateString('es-CL')}<br>
+                            <strong>Centro:</strong> Calama, Chile
+                        </div>
+                    </div>
+
+                    <div class="patient-box">
+                        <div style="font-weight: bold; font-size: 13px; color: #0f766e; margin-bottom: 8px; text-transform: uppercase;">
+                            Datos del Paciente
+                        </div>
+                        <div class="patient-grid">
+                            <div><strong>Nombre:</strong> ${escapeHtml(patient.nombre || title)}</div>
+                            <div><strong>RUT:</strong> ${escapeHtml(patient.rut || patientRut)}</div>
+                            <div><strong>Edad / F. Nacimiento:</strong> ${age !== null ? age + ' años (' + birthFormatted + ')' : birthFormatted}</div>
+                            <div><strong>Teléfono:</strong> ${escapeHtml(phone)}</div>
+                            <div style="grid-column: span 2;"><strong>Diagnóstico Principal:</strong> ${escapeHtml(diagnosis)}</div>
+                        </div>
+                    </div>
+
+                    <h2>Evolución Clínica e Historial de Sesiones</h2>
+                    <div>${historyHtml}</div>
+
+                    <footer>
+                        <strong>Kine Barrera Kinesiología</strong> · Dirección: Pinto Ahumada Eduvina, Calama · Teléfono / WhatsApp: +56 9 4218 3583<br>
+                        Documento de uso clínico e informativo generado desde la plataforma digital oficial.
+                    </footer>
+
+                    <script>
+                        window.onload = function() { 
+                            window.print(); 
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
         function renderPatientChart(records) {
 
             const labels =
